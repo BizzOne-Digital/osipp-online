@@ -4,14 +4,20 @@ import { useAuth } from '../../context/AuthContext';
 import ProductCard from '../../components/ProductCard';
 import axios from 'axios';
 
+const API = process.env.REACT_APP_API_URL || '/api';
+
 export default function Wishlist() {
   const { isAuth, loading: authLoading } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isAuth) axios.get('/api/auth/wishlist').then(r => setProducts(r.data.data || [])).catch(()=>{}).finally(()=>setLoading(false));
-    else setLoading(false);
+    if (isAuth) {
+      axios.get(`${API}/auth/wishlist`)
+        .then(r => setProducts(r.data?.data || []))
+        .catch(()=>{})
+        .finally(()=>setLoading(false));
+    } else { setLoading(false); }
   }, [isAuth]);
 
   if (authLoading) return <div style={{textAlign:'center',padding:80}}><div className="spinner"/></div>;

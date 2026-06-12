@@ -20,7 +20,13 @@ try {
 const app = express();
 
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
-app.use(cors());
+
+// CORS - allow frontend domain
+app.use(cors({
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
+  credentials: true
+}));
+
 app.use(express.json({ limit: '10mb' }));
 if (process.env.NODE_ENV !== 'production') app.use(morgan('dev'));
 
@@ -41,21 +47,30 @@ app.use('/api/coupons', require('./routes/coupons'));
 app.use('/api/banners', require('./routes/banners'));
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-// Production: serve React build
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/build')));
-  app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../frontend/build', 'index.html')));
-}
+app.use((err, req, res, next) => {
+  console.error(err.message);
+  res.status(500).json({ success: false, message: err.message });
+});
 
-app.use((err, req, res, next) => { console.error(err.stack); res.status(500).json({ success: false, message: err.message }); });
+// ── MongoDB connection (cached for serverless) ──
+let isConnected = false;
+const connectDB = async () => {
+  if (isConnected) return;
+  const conn = await mongoose.connect(process.env.MONGO_URI);
+  isConnected = conn.connections[0].readyState === 1;
+};
 
-// Only listen when running directly (not on Vercel)
-if (process.env.VERCEL !== '1') {
+// Local dev: listen on port
+if (!process.env.VERCEL) {
   const PORT = process.env.PORT || 5000;
-  const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/osipp_delivery';
-  mongoose.connect(MONGO_URI)
+  connectDB()
     .then(() => { console.log('MongoDB Connected'); app.listen(PORT, () => console.log(`Server on port ${PORT}`)); })
     .catch(err => { console.error(err); process.exit(1); });
+} else {
+  // Vercel: connect on each request
+  app.use(async (req, res, next) => {
+    try { await connectDB(); next(); } catch (err) { res.status(500).json({ success: false, message: 'DB error' }); }
+  });
 }
 
 module.exports = app;

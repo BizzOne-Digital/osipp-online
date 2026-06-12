@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import axios from 'axios';
 
 const AuthContext = createContext();
-const API = '/api';
+const API = process.env.REACT_APP_API_URL || '/api';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -55,11 +55,9 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   const isInWishlist = useCallback((productId) => wishlist.includes(productId), [wishlist]);
-  const isAuth = !!user;
-  const isAdmin = user?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading, isAuth, isAdmin, toggleWishlist, isInWishlist, wishlist }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, loading, isAuth: !!user, isAdmin: user?.role === 'admin', toggleWishlist, isInWishlist, wishlist }}>
       {children}
     </AuthContext.Provider>
   );

@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { CloseIcon, ArrowIcon, BottleSVG, MinusIcon, PlusIcon } from './Icons';
 import axios from 'axios';
 
+const API = process.env.REACT_APP_API_URL || '/api';
+
 export default function CartDrawer({ onClose }) {
   const { items, updateQty, removeItem, subtotal, deliveryFee, total, clearCart, discount, coupon, couponError, couponLoading, applyCoupon, removeCoupon } = useCart();
   const { user } = useAuth();
@@ -20,7 +22,7 @@ export default function CartDrawer({ onClose }) {
     if (!form.name || !form.phone || !form.address) return alert('Fill required fields');
     setLoading(true);
     try {
-      const res = await axios.post('/api/orders', {
+      const res = await axios.post(`${API}/orders`, {
         customer: form, items: items.map(i => ({ product: i._id, quantity: i.qty })),
         paymentMethod: payMethod, couponCode: coupon?.code || ''
       });
@@ -61,7 +63,6 @@ export default function CartDrawer({ onClose }) {
             ))}
           </div>
           {items.length > 0 && <div className="cart-footer">
-            {/* Coupon */}
             <div style={{marginBottom:14}}>
               {coupon ? (
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',background:'var(--cream)',padding:'8px 12px',borderRadius:8,fontSize:13}}>

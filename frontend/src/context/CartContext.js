@@ -2,11 +2,12 @@ import { createContext, useContext, useState, useCallback } from 'react';
 import axios from 'axios';
 
 const CartContext = createContext();
+const API = process.env.REACT_APP_API_URL || '/api';
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState([]);
   const [toast, setToast] = useState(null);
-  const [coupon, setCoupon] = useState(null); // { code, discount, description }
+  const [coupon, setCoupon] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
 
@@ -21,31 +22,18 @@ export function CartProvider({ children }) {
   }, []);
 
   const removeItem = useCallback((id) => setItems(prev => prev.filter(i => i._id !== id)), []);
-
   const updateQty = useCallback((id, delta) => {
-    setItems(prev => prev.map(i => {
-      if (i._id !== id) return i;
-      const q = i.qty + delta;
-      return q < 1 ? null : { ...i, qty: q };
-    }).filter(Boolean));
+    setItems(prev => prev.map(i => { if (i._id !== id) return i; const q = i.qty + delta; return q < 1 ? null : { ...i, qty: q }; }).filter(Boolean));
   }, []);
-
   const clearCart = useCallback(() => { setItems([]); setCoupon(null); setCouponError(''); }, []);
 
   const applyCoupon = useCallback(async (code) => {
     setCouponLoading(true); setCouponError('');
     try {
       const st = items.reduce((s, i) => s + i.price * i.qty, 0);
-      const res = await axios.post('/api/coupons/validate', { code, subtotal: st });
-      setCoupon(res.data.data);
-      setCouponLoading(false);
-      return true;
-    } catch (err) {
-      setCouponError(err.response?.data?.message || 'Invalid code');
-      setCoupon(null);
-      setCouponLoading(false);
-      return false;
-    }
+      const res = await axios.post(`${API}/coupons/validate`, { code, subtotal: st });
+      setCoupon(res.data.data); setCouponLoading(false); return true;
+    } catch (err) { setCouponError(err.response?.data?.message || 'Invalid code'); setCoupon(null); setCouponLoading(false); return false; }
   }, [items]);
 
   const removeCoupon = useCallback(() => { setCoupon(null); setCouponError(''); }, []);
@@ -57,11 +45,7 @@ export function CartProvider({ children }) {
   const total = Math.max(0, subtotal - discount + deliveryFee);
 
   return (
-    <CartContext.Provider value={{
-      items, addItem, removeItem, updateQty, clearCart,
-      subtotal, deliveryFee, total, itemCount, discount,
-      toast, coupon, couponLoading, couponError, applyCoupon, removeCoupon
-    }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQty, clearCart, subtotal, deliveryFee, total, itemCount, discount, toast, coupon, couponLoading, couponError, applyCoupon, removeCoupon }}>
       {children}
     </CartContext.Provider>
   );

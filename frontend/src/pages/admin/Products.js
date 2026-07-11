@@ -38,14 +38,18 @@ export default function Products() {
   useEffect(() => { const t = setTimeout(() => { setPage(1); fetchProducts(); }, 300); return () => clearTimeout(t); }, [search]);
 
   const openAdd = () => {
-    setForm({ name: '', category: 'Spirits', subCategory: '', store: 'Liquor Store', volume: '', price: '', stock: '100', badge: '', description: '' });
+    setForm({ name: '', category: 'Spirits', subCategory: '', store: 'Liquor Store', volume: '', price: '', stock: '100', badge: '', description: '', variants: [] });
     setImageFile(null); setImagePreview(''); setModal('add');
   };
 
   const openEdit = (p) => {
-    setForm({ ...p, price: String(p.price), stock: String(p.stock) });
+    setForm({ ...p, price: String(p.price), stock: String(p.stock), variants: (p.variants || []).map(v => ({ label: v.label, price: String(v.price), stock: String(v.stock) })) });
     setImageFile(null); setImagePreview(p.image || ''); setModal(p);
   };
+
+  const addVariant = () => setForm(p => ({ ...p, variants: [...(p.variants || []), { label: '', price: '', stock: '100' }] }));
+  const updVariant = (i, k, v) => setForm(p => ({ ...p, variants: p.variants.map((x, idx) => idx === i ? { ...x, [k]: v } : x) }));
+  const removeVariant = (i) => setForm(p => ({ ...p, variants: p.variants.filter((_, idx) => idx !== i) }));
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -62,6 +66,10 @@ export default function Products() {
       ['name','category','subCategory','store','volume','badge','description'].forEach(k => formData.append(k, form[k] || ''));
       formData.set('price', parseFloat(form.price));
       formData.set('stock', parseInt(form.stock) || 100);
+      const cleanVariants = (form.variants || [])
+        .filter(v => v.label && v.price !== '')
+        .map(v => ({ label: v.label.trim(), price: parseFloat(v.price) || 0, stock: parseInt(v.stock) || 0 }));
+      formData.set('variants', JSON.stringify(cleanVariants));
       if (imageFile) formData.append('image', imageFile);
 
       const config = { headers: { 'Content-Type': 'multipart/form-data' } };
@@ -165,6 +173,20 @@ export default function Products() {
                 <div className="form-group"><label className="form-label">Stock</label><input className="form-input" type="number" value={form.stock} onChange={e => upd('stock', e.target.value)} /></div>
               </div>
               <div className="form-group"><label className="form-label">Badge</label><select className="form-input" value={form.badge} onChange={e => upd('badge', e.target.value)}>{BADGES.map(b => <option key={b} value={b}>{b || '— None —'}</option>)}</select></div>
+
+              <div className="form-group" style={{ borderTop: '1px solid var(--gray-lt)', paddingTop: 16, marginTop: 8 }}>
+                <label className="form-label">Size Options (optional)</label>
+                <div style={{ fontSize: 11, color: 'var(--gray)', marginBottom: 10 }}>Add sizes with their own price (e.g. 1750 mL Bottle — $69.95). If none, the single price above is used. One image is shared for all sizes.</div>
+                {(form.variants || []).map((v, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                    <input className="form-input" style={{ flex: 2 }} value={v.label} onChange={e => updVariant(i, 'label', e.target.value)} placeholder="1750 mL Bottle" />
+                    <input className="form-input" style={{ flex: 1 }} type="number" step="0.01" value={v.price} onChange={e => updVariant(i, 'price', e.target.value)} placeholder="Price" />
+                    <input className="form-input" style={{ flex: 1 }} type="number" value={v.stock} onChange={e => updVariant(i, 'stock', e.target.value)} placeholder="Stock" />
+                    <button className="adm-btn-danger" onClick={() => removeVariant(i)}>✕</button>
+                  </div>
+                ))}
+                <button className="adm-btn-outline-s" onClick={addVariant}>+ Add Size</button>
+              </div>
             </div>
             <div className="adm-modal-foot">
               <button className="adm-btn-outline-s" onClick={() => setModal(null)}>Cancel</button>

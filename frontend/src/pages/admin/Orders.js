@@ -226,13 +226,30 @@ export default function Orders() {
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: i < selected.items.length - 1 ? '1px solid var(--gray-lt)' : 'none' }}>
                       <div>
                         <div style={{ fontWeight: 600, fontSize: 14 }}>{item.name}</div>
-                        <div style={{ fontSize: 12, color: 'var(--gray)' }}>{item.volume} &middot; Qty: {item.quantity}</div>
+                        <div style={{ fontSize: 12, color: 'var(--gray)' }}>{item.variantLabel || item.volume}{item.store ? ` · ${item.store}` : ''} &middot; Qty: {item.quantity}</div>
                       </div>
                       <div style={{ fontWeight: 700 }}>${(item.price * item.quantity).toFixed(2)}</div>
                     </div>
                   ))}
+                  {(selected.addOns || []).map((a, i) => (
+                    <div key={`ao-${i}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--gray-lt)', background: 'var(--cream)' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 14 }}>{a.name} <span style={{ fontSize: 11, color: 'var(--gray)' }}>(extra)</span></div>
+                        <div style={{ fontSize: 12, color: 'var(--gray)' }}>Qty: {a.quantity}</div>
+                      </div>
+                      <div style={{ fontWeight: 700 }}>${(a.price * a.quantity).toFixed(2)}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
+
+              {/* ── Driver Instructions ── */}
+              {selected.driverInstructions && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--gray)', marginBottom: 10 }}>Driver Instructions</div>
+                  <div style={{ background: '#FFF8E1', border: '1px solid #FFE082', borderRadius: 10, padding: 14, fontSize: 14 }}>{selected.driverInstructions}</div>
+                </div>
+              )}
 
               {/* ── Payment Summary ── */}
               <div>
@@ -246,9 +263,20 @@ export default function Orders() {
                       <span>Discount {selected.couponCode ? `(${selected.couponCode})` : ''}</span><span>-${selected.discount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
-                    <span>Delivery</span><span>${(selected.deliveryFee || 0).toFixed(2)}</span>
-                  </div>
+                  {(selected.deliveryStops || []).length > 1
+                    ? selected.deliveryStops.map(d => (
+                        <div key={d.store} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
+                          <span>Delivery · {d.store}</span><span>${(d.fee || 0).toFixed(2)}</span>
+                        </div>
+                      ))
+                    : <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
+                        <span>Delivery</span><span>${(selected.deliveryFee || 0).toFixed(2)}</span>
+                      </div>}
+                  {(selected.tip || 0) > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
+                      <span>Driver tip</span><span>${selected.tip.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 800, paddingTop: 10, borderTop: '1.5px solid var(--gray-lt)', marginTop: 8 }}>
                     <span>Total</span><span style={{ color: 'var(--gold-dk)' }}>${(selected.total || 0).toFixed(2)}</span>
                   </div>

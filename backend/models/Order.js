@@ -5,7 +5,9 @@ const orderItemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   price: { type: Number, required: true },
   quantity: { type: Number, required: true, min: 1 },
-  volume: { type: String, default: '' }
+  volume: { type: String, default: '' },
+  variantLabel: { type: String, default: '' }, // selected size, if any
+  store: { type: String, default: '' }
 });
 
 const orderSchema = new mongoose.Schema({
@@ -20,8 +22,25 @@ const orderSchema = new mongoose.Schema({
   },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   items: [orderItemSchema],
+  addOns: {
+    type: [{
+      name: { type: String, required: true },
+      price: { type: Number, required: true },
+      quantity: { type: Number, default: 1, min: 1 }
+    }],
+    default: []
+  },
   subtotal: { type: Number, required: true },
+  discount: { type: Number, default: 0 },
+  couponCode: { type: String, default: '' },
   deliveryFee: { type: Number, default: 0 },
+  // Breakdown of which stores were charged, e.g. [{ store: 'Liquor Store', fee: 13 }]
+  deliveryStops: {
+    type: [{ store: String, fee: Number }],
+    default: []
+  },
+  tip: { type: Number, default: 0, min: 0 },
+  driverInstructions: { type: String, default: '' },
   total: { type: Number, required: true },
   paymentMethod: { type: String, enum: ['card', 'cash', 'interac'], default: 'cash' },
   paymentStatus: { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },

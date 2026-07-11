@@ -48,6 +48,7 @@ app.use('/api/settings', require('./routes/settings'));
 app.use('/api/promotions', require('./routes/promotions'));
 app.use('/api/coupons', require('./routes/coupons'));
 app.use('/api/banners', require('./routes/banners'));
+app.use('/api/services', require('./routes/services'));
 app.get('/api/health', (req, res) => res.json({ status: 'ok', db: isConnected }));
 
 app.use((err, req, res, next) => {

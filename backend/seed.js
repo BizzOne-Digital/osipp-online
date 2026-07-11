@@ -5781,6 +5781,45 @@ const products = [
   }
 ];
 
+// Group same-name products (same category/subCategory/store) whose volume is a
+// size or pack (ml / L) into a single product with `variants`. Age-statement
+// items (12yr, 18yr, etc.) and one-off items (1 bag, 1 unit) are left as their
+// own separate products so nothing gets wrongly merged.
+function groupIntoVariants(flat) {
+  const isSize = (v) => /\d\s*(ml|l)\b/i.test(v || '');
+  const groups = new Map();
+  const result = [];
+
+  for (const p of flat) {
+    if (!isSize(p.volume)) {
+      result.push({ ...p, variants: [] }); // standalone product
+      continue;
+    }
+    const key = [p.name, p.category, p.subCategory, p.store].join('||');
+    if (!groups.has(key)) {
+      const shell = { ...p, variants: [] };
+      groups.set(key, shell);
+      result.push(shell);
+    }
+    groups.get(key).variants.push({
+      label: p.volume, price: p.price, stock: p.stock != null ? p.stock : 100, sku: ''
+    });
+  }
+
+  for (const prod of groups.values()) {
+    if (prod.variants.length === 1) {
+      const v = prod.variants[0];
+      prod.volume = v.label; prod.price = v.price; prod.stock = v.stock;
+      prod.variants = [];
+    } else {
+      prod.price = Math.min(...prod.variants.map(v => v.price)); // "from" price
+      prod.volume = '';
+    }
+  }
+
+  return result;
+}
+
 async function seed() {
   try {
     await mongoose.connect(MONGO_URI);
@@ -5802,9 +5841,10 @@ async function seed() {
     });
     console.log('Admin created: admin@osipp.ca / osipp2024');
 
-    // Products
-    const created = await Product.insertMany(products);
-    console.log(created.length + ' products seeded');
+    // Products (grouped into size/pack variants)
+    const grouped = groupIntoVariants(products);
+    const created = await Product.insertMany(grouped);
+    console.log(created.length + ' products seeded (grouped from ' + products.length + ' rows)');
 
     // Settings
     await Settings.create({
@@ -5840,4 +5880,6 @@ async function seed() {
   }
 }
 
-seed();
+if (require.main === module) seed();
+
+module.exports = { groupIntoVariants, products };

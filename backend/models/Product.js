@@ -1,5 +1,14 @@
 const mongoose = require('mongoose');
 
+// A size/price option for a product (e.g. 1750 mL Bottle for $69.95).
+// Image stays on the parent product — variants do not carry their own image.
+const variantSchema = new mongoose.Schema({
+  label: { type: String, required: true, trim: true }, // e.g. "1750 mL Bottle"
+  price: { type: Number, required: true, min: 0 },
+  stock: { type: Number, default: 100, min: 0 },
+  sku: { type: String, default: '' }
+}, { _id: false });
+
 const productSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   description: { type: String, default: '' },
@@ -12,7 +21,9 @@ const productSchema = new mongoose.Schema({
   badge: { type: String, default: '', enum: ['', 'Popular', 'Premium', 'Sale', 'New'] },
   stock: { type: Number, default: 100, min: 0 },
   isActive: { type: Boolean, default: true },
-  sku: { type: String, default: '' }
+  sku: { type: String, default: '' },
+  // Optional size options. If empty, the base `price` is used (backward compatible).
+  variants: { type: [variantSchema], default: [] }
 }, { timestamps: true });
 
 productSchema.index({ name: 'text', description: 'text', category: 'text' });

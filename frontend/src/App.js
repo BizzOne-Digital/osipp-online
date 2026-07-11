@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
 import { useCart } from './context/CartContext';
 
@@ -11,6 +11,9 @@ import AdminSidebar from './components/AdminSidebar';
 
 import Home from './pages/public/Home';
 import Products from './pages/public/Products';
+import ProductDetail from './pages/public/ProductDetail';
+import Grocery from './pages/public/Grocery';
+import Gifts from './pages/public/Gifts';
 import Contact from './pages/public/Contact';
 import About from './pages/public/About';
 import Tracking from './pages/public/Tracking';
@@ -24,7 +27,14 @@ import AdminDashboard from './pages/admin/Dashboard';
 import AdminOrders from './pages/admin/Orders';
 import AdminProducts from './pages/admin/Products';
 import AdminCustomers from './pages/admin/Customers';
+import AdminServices from './pages/admin/Services';
 import AdminSettings from './pages/admin/Settings';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
 
 function PrivateRoute({ children }) {
   const { isAuth, isAdmin, loading } = useAuth();
@@ -45,19 +55,22 @@ function AdminLayout({ children }) {
 }
 
 export default function App() {
-  const [cartOpen, setCartOpen] = useState(false);
-  const { toast } = useCart();
+  const { toast, cartOpen, openCart, closeCart } = useCart();
   const { pathname } = useLocation();
   const isAdmin = pathname.startsWith('/admin');
 
   return (
     <>
+      <ScrollToTop />
       {!isAdmin && (
         <>
-          <Navbar onCartOpen={() => setCartOpen(true)} />
+          <Navbar onCartOpen={openCart} />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/grocery" element={<Grocery />} />
+            <Route path="/gifts" element={<Gifts />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/tracking" element={<Tracking />} />
@@ -67,7 +80,7 @@ export default function App() {
             <Route path="/wishlist" element={<Wishlist />} />
           </Routes>
           <Footer />
-          {cartOpen && <CartDrawer onClose={() => setCartOpen(false)} />}
+          {cartOpen && <CartDrawer onClose={closeCart} />}
           {toast && <Toast msg={toast} />}
         </>
       )}
@@ -78,6 +91,7 @@ export default function App() {
           <Route path="/admin/orders" element={<PrivateRoute><AdminLayout><AdminOrders /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/products" element={<PrivateRoute><AdminLayout><AdminProducts /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/customers" element={<PrivateRoute><AdminLayout><AdminCustomers /></AdminLayout></PrivateRoute>} />
+          <Route path="/admin/services" element={<PrivateRoute><AdminLayout><AdminServices /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/settings" element={<PrivateRoute><AdminLayout><AdminSettings /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/*" element={<Navigate to="/admin" />} />
         </Routes>

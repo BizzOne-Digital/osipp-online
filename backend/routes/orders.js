@@ -2,25 +2,66 @@ const router = require('express').Router();
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Coupon = require('../models/Coupon');
+const Settings = require('../models/Settings');
 const { protect, adminOnly } = require('../middleware/auth');
 
-// POST /api/orders - place order with optional coupon
+const r2 = (n) => Math.round(n * 100) / 100;
+
+// POST /api/orders - place order with optional coupon, add-ons, tip, stop-based delivery
 router.post('/', async (req, res) => {
   try {
-    const { customer, items, paymentMethod, notes, couponCode } = req.body;
+    const { customer, items, paymentMethod, notes, couponCode, addOns, tip, driverInstructions } = req.body;
     if (!customer || !items || items.length === 0) return res.status(400).json({ success: false, message: 'Customer info and items required' });
+
+    // Load settings once (used for delivery fees, tip, and add-on pricing)
+    let settings = await Settings.findOne();
+    if (!settings) settings = await Settings.create({});
 
     let subtotal = 0;
     const orderItems = [];
+    const stores = new Set();          // distinct stores => delivery stops
+    const stockUpdates = [];           // apply only after all validation passes
+
     for (const item of items) {
       const product = await Product.findById(item.product);
       if (!product) return res.status(404).json({ success: false, message: `Product not found` });
-      if (product.stock < item.quantity) return res.status(400).json({ success: false, message: `${product.name} out of stock` });
-      orderItems.push({ product: product._id, name: product.name, price: product.price, quantity: item.quantity, volume: product.volume });
-      subtotal += product.price * item.quantity;
-      product.stock -= item.quantity;
-      await product.save();
+
+      // Resolve variant (size) if selected — price/label/stock come from the server, not the client.
+      let unitPrice = product.price;
+      let variantLabel = '';
+      let volume = product.volume;
+      const vIdx = item.variantIndex;
+      if (vIdx !== undefined && vIdx !== null && vIdx !== '' && product.variants && product.variants[vIdx]) {
+        const v = product.variants[vIdx];
+        unitPrice = v.price;
+        variantLabel = v.label;
+        volume = v.label || product.volume;
+        if (v.stock < item.quantity) return res.status(400).json({ success: false, message: `${product.name} (${v.label}) out of stock` });
+        stockUpdates.push({ id: product._id, variantIndex: vIdx, qty: item.quantity });
+      } else {
+        if (product.stock < item.quantity) return res.status(400).json({ success: false, message: `${product.name} out of stock` });
+        stockUpdates.push({ id: product._id, variantIndex: null, qty: item.quantity });
+      }
+
+      orderItems.push({ product: product._id, name: product.name, price: unitPrice, quantity: item.quantity, volume, variantLabel, store: product.store });
+      subtotal += unitPrice * item.quantity;
+      if (product.store) stores.add(product.store);
     }
+
+    // Validate add-ons against admin-configured list (price is taken from settings, not the client)
+    const orderAddOns = [];
+    let addOnsTotal = 0;
+    if (Array.isArray(addOns)) {
+      for (const a of addOns) {
+        const match = (settings.addOns || []).find(s => s.name === a.name && s.isActive);
+        if (!match) continue;
+        const qty = Math.max(1, parseInt(a.quantity) || 1);
+        orderAddOns.push({ name: match.name, price: match.price, quantity: qty });
+        addOnsTotal += match.price * qty;
+      }
+    }
+
+    subtotal = r2(subtotal + addOnsTotal);
 
     // Apply coupon
     let discount = 0;
@@ -30,7 +71,7 @@ router.post('/', async (req, res) => {
       if (coupon && subtotal >= coupon.minOrder) {
         discount = coupon.type === 'percentage' ? (subtotal * coupon.value / 100) : coupon.value;
         if (coupon.maxDiscount && discount > coupon.maxDiscount) discount = coupon.maxDiscount;
-        discount = Math.round(discount * 100) / 100;
+        discount = r2(discount);
         coupon.usedCount += 1;
         if (req.user) coupon.usedBy.push(req.user._id);
         await coupon.save();
@@ -38,12 +79,43 @@ router.post('/', async (req, res) => {
       }
     }
 
-    const deliveryFee = subtotal > 0 ? 13 : 0;
-    const total = Math.max(0, subtotal - discount + deliveryFee);
+    // Delivery fee: per-stop (sum of each distinct store's fee) or flat fallback
+    const deliveryStops = [];
+    let deliveryFee = 0;
+    if (subtotal > 0) {
+      const feeMap = settings.storeDeliveryFees || {};
+      if (settings.useStopBasedDelivery) {
+        for (const store of stores) {
+          const fee = feeMap[store] != null ? feeMap[store] : settings.deliveryFee;
+          deliveryStops.push({ store, fee });
+          deliveryFee += fee;
+        }
+      } else {
+        deliveryFee = settings.deliveryFee;
+      }
+    }
+    deliveryFee = r2(deliveryFee);
+
+    // Driver tip
+    let tipAmount = Math.max(0, parseFloat(tip) || 0);
+    tipAmount = r2(tipAmount);
+
+    const total = r2(Math.max(0, subtotal - discount + deliveryFee + tipAmount));
+
+    // All validation passed — commit stock changes
+    for (const u of stockUpdates) {
+      if (u.variantIndex !== null) {
+        await Product.findByIdAndUpdate(u.id, { $inc: { [`variants.${u.variantIndex}.stock`]: -u.qty } });
+      } else {
+        await Product.findByIdAndUpdate(u.id, { $inc: { stock: -u.qty } });
+      }
+    }
 
     const order = await Order.create({
-      customer, items: orderItems, subtotal, discount, couponCode: couponApplied,
-      deliveryFee, total, paymentMethod: paymentMethod || 'cash', notes: notes || '',
+      customer, items: orderItems, addOns: orderAddOns, subtotal, discount, couponCode: couponApplied,
+      deliveryFee, deliveryStops, tip: tipAmount, total,
+      paymentMethod: paymentMethod || 'cash', notes: notes || '',
+      driverInstructions: driverInstructions || '',
       user: req.user ? req.user._id : null
     });
 
@@ -92,7 +164,16 @@ router.put('/:id/status', protect, adminOnly, async (req, res) => {
       update.cancelledAt = new Date();
       update.cancelReason = req.body.reason || '';
       const order = await Order.findById(req.params.id);
-      if (order) for (const item of order.items) await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
+      if (order) for (const item of order.items) {
+        if (item.variantLabel) {
+          const product = await Product.findById(item.product);
+          const idx = product ? (product.variants || []).findIndex(v => v.label === item.variantLabel) : -1;
+          if (idx > -1) await Product.findByIdAndUpdate(item.product, { $inc: { [`variants.${idx}.stock`]: item.quantity } });
+          else await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
+        } else {
+          await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
+        }
+      }
     }
     const order = await Order.findByIdAndUpdate(req.params.id, update, { new: true });
     res.json({ success: true, data: order });

@@ -89,10 +89,23 @@ router.get('/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+// variants may arrive as a JSON string when sent via multipart/form-data
+const parseVariants = (data) => {
+  if (typeof data.variants === 'string') {
+    try { data.variants = JSON.parse(data.variants); } catch { data.variants = []; }
+  }
+  if (Array.isArray(data.variants)) {
+    data.variants = data.variants
+      .filter(v => v && v.label && v.price !== '' && v.price != null)
+      .map(v => ({ label: String(v.label).trim(), price: parseFloat(v.price) || 0, stock: parseInt(v.stock) || 0, sku: v.sku || '' }));
+  }
+  return data;
+};
+
 // POST /api/products - admin
 router.post('/', protect, adminOnly, upload.single('image'), async (req, res) => {
   try {
-    const data = { ...req.body };
+    const data = parseVariants({ ...req.body });
     if (req.file) data.image = req.file.path || req.file.location || '';
     const product = await Product.create(data);
     res.status(201).json({ success: true, data: product });
@@ -102,7 +115,7 @@ router.post('/', protect, adminOnly, upload.single('image'), async (req, res) =>
 // PUT /api/products/:id - admin
 router.put('/:id', protect, adminOnly, upload.single('image'), async (req, res) => {
   try {
-    const data = { ...req.body };
+    const data = parseVariants({ ...req.body });
     const existing = await Product.findById(req.params.id);
     if (!existing) return res.status(404).json({ success: false, message: 'Not found' });
     if (req.file) {

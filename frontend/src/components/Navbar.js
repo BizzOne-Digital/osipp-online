@@ -13,7 +13,7 @@ export default function Navbar({ onCartOpen }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenu, setUserMenu] = useState(false);
 
-  const links = [{ to:'/',label:'Home' },{ to:'/products',label:'Products' },{ to:'/about',label:'About' },{ to:'/contact',label:'Contact' },{ to:'/tracking',label:'Track Order' }];
+  const links = [{ to:'/',label:'Home' },{ to:'/products',label:'Alcohol' },{ to:'/grocery',label:'Grocery' },{ to:'/products?cat=Convenience',label:'Convenience' },{ to:'/gifts',label:'Gifts' },{ to:'/tracking',label:'Track Order' }];
 
   return (
     <nav className="nav">

@@ -27,6 +27,15 @@ export default function Settings() {
 
   const upd = (k, v) => setSettings(p => ({ ...p, [k]: v }));
   const updHours = (k, v) => setSettings(p => ({ ...p, deliveryHours: { ...p.deliveryHours, [k]: v } }));
+  const updStoreFee = (store, v) => setSettings(p => ({ ...p, storeDeliveryFees: { ...p.storeDeliveryFees, [store]: parseFloat(v) || 0 } }));
+
+  // Add-ons
+  const addAddOn = () => setSettings(p => ({ ...p, addOns: [...(p.addOns || []), { name: '', price: 0, isActive: true }] }));
+  const updAddOn = (idx, k, v) => setSettings(p => ({ ...p, addOns: p.addOns.map((a, i) => i === idx ? { ...a, [k]: v } : a) }));
+  const removeAddOn = (idx) => setSettings(p => ({ ...p, addOns: p.addOns.filter((_, i) => i !== idx) }));
+
+  // Tip presets
+  const updTipPresets = (v) => setSettings(p => ({ ...p, tipPresets: v.split(',').map(x => parseFloat(x.trim())).filter(n => !isNaN(n)) }));
 
   const saveSettings = async () => {
     setSaving(true); setSaved(false);
@@ -84,6 +93,7 @@ export default function Settings() {
   const tabs = [
     { id: 'general', label: 'General' },
     { id: 'delivery', label: 'Delivery' },
+    { id: 'addons', label: 'Add-ons & Tips' },
     { id: 'locations', label: 'Locations' },
     { id: 'promotions', label: 'Promotions' },
     { id: 'hours', label: 'Hours' },
@@ -131,6 +141,62 @@ export default function Settings() {
               <div className="form-group"><label className="form-label">Min Order ($)</label><input className="form-input" type="number" value={settings.minOrder} onChange={e => upd('minOrder', parseFloat(e.target.value))} /></div>
             </div>
             <div className="form-group"><label className="form-label">Age Requirement</label><input className="form-input" value={settings.ageRequirement || ''} onChange={e => upd('ageRequirement', e.target.value)} /></div>
+
+            <div style={{ borderTop: '1px solid var(--gray-lt)', margin: '20px 0', paddingTop: 20 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+                <input type="checkbox" checked={!!settings.useStopBasedDelivery} onChange={e => upd('useStopBasedDelivery', e.target.checked)} />
+                Charge delivery per store stop (multiple stops = higher fee)
+              </label>
+              <div style={{ fontSize: 12, color: 'var(--gray)', marginTop: 6, marginBottom: 16 }}>
+                When on: total delivery = sum of the fees for each distinct store in the order. When off: the flat Delivery Fee above is used.
+              </div>
+              {settings.useStopBasedDelivery && (
+                <div className="form-row" style={{ flexWrap: 'wrap' }}>
+                  {['Liquor Store', 'Beer Store', 'Convenience Store'].map(store => (
+                    <div className="form-group" key={store} style={{ minWidth: 150 }}>
+                      <label className="form-label">{store} ($)</label>
+                      <input className="form-input" type="number" step="0.01"
+                        value={settings.storeDeliveryFees?.[store] ?? ''}
+                        onChange={e => updStoreFee(store, e.target.value)} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button className="adm-btn adm-btn-gold" onClick={saveSettings} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+          </div>
+        )}
+
+        {/* Add-ons & Tips */}
+        {tab === 'addons' && (
+          <div className="adm-table-wrap" style={{ padding: 28 }}>
+            <div style={{ fontFamily: 'var(--font-d)', fontSize: 18, fontWeight: 800, marginBottom: 6 }}>Extra Add-on Items</div>
+            <div style={{ fontSize: 12, color: 'var(--gray)', marginBottom: 16 }}>Items customers can add at checkout (e.g. pack of smokes, ice, lighter).</div>
+            {(settings.addOns || []).map((a, i) => (
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
+                <input className="form-input" style={{ flex: 2 }} value={a.name} onChange={e => updAddOn(i, 'name', e.target.value)} placeholder="Item name" />
+                <input className="form-input" style={{ flex: 1 }} type="number" step="0.01" value={a.price} onChange={e => updAddOn(i, 'price', parseFloat(e.target.value) || 0)} placeholder="Price" />
+                <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, whiteSpace: 'nowrap' }}>
+                  <input type="checkbox" checked={a.isActive !== false} onChange={e => updAddOn(i, 'isActive', e.target.checked)} /> Active
+                </label>
+                <button className="adm-btn-danger" onClick={() => removeAddOn(i)}>Del</button>
+              </div>
+            ))}
+            <button className="adm-btn-outline-s" onClick={addAddOn} style={{ marginTop: 6 }}>+ Add Item</button>
+
+            <div style={{ borderTop: '1px solid var(--gray-lt)', margin: '24px 0', paddingTop: 20 }}>
+              <div style={{ fontFamily: 'var(--font-d)', fontSize: 18, fontWeight: 800, marginBottom: 12 }}>Driver Tips</div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 600, fontSize: 14, cursor: 'pointer', marginBottom: 14 }}>
+                <input type="checkbox" checked={settings.tipEnabled !== false} onChange={e => upd('tipEnabled', e.target.checked)} />
+                Show tip option at checkout
+              </label>
+              <div className="form-group">
+                <label className="form-label">Tip preset amounts ($, comma separated)</label>
+                <input className="form-input" defaultValue={(settings.tipPresets || []).join(', ')} onBlur={e => updTipPresets(e.target.value)} placeholder="3, 5, 10" />
+              </div>
+            </div>
+
             <button className="adm-btn adm-btn-gold" onClick={saveSettings} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
           </div>
         )}

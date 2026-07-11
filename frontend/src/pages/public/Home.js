@@ -52,18 +52,26 @@ export default function Home() {
   const [featured, setFeatured] = useState([]);
   const [promotions, setPromotions] = useState([]);
   const [search, setSearch] = useState('');
+  const [catImgs, setCatImgs] = useState({});
+
+  const cats = [
+    { label: 'Beer', cls: 'beer', img: process.env.PUBLIC_URL + '/images/beer.png', fallback: <CatBeer />, sub: 'Lagers, Ales, Stouts & Craft', store: 'Beer Store' },
+    { label: 'Spirits', cls: 'spirits',img: process.env.PUBLIC_URL + '/images/wh.png', fallback: <CatSpirits />, sub: 'Whiskey, Vodka, Rum, Gin', store: 'Liquor Store' },
+    { label: 'Wine', cls: 'wine',img: process.env.PUBLIC_URL + '/images/wine.png', fallback: <CatWine />, sub: 'Red, White, Rosé, Champagne', store: 'Liquor Store' },
+    { label: 'Convenience', cls: 'store', img: process.env.PUBLIC_URL + '/images/4th.png',fallback: <CatStore />, sub: 'Snacks, Mixers, Ice, Cups', store: 'Convenience Store' },
+  ];
 
   useEffect(() => {
     axios.get(`${API}/products?limit=8&badge=Popular`).then(r => setFeatured(r.data.data)).catch(() => {});
     axios.get(`${API}/promotions?active=true`).then(r => setPromotions(r.data.data || [])).catch(() => {});
+    // Pull one representative product image per category for the floating category cards
+    ['Beer', 'Spirits', 'Wine', 'Convenience'].forEach(cat => {
+      axios.get(`${API}/products?category=${encodeURIComponent(cat)}&limit=6`).then(r => {
+        const withImg = (r.data.data || []).find(p => p.image);
+        if (withImg) setCatImgs(prev => ({ ...prev, [cat]: withImg.image }));
+      }).catch(() => {});
+    });
   }, []);
-
-  const cats = [
-    { label: 'Beer', cls: 'beer', icon: <CatBeer />, sub: 'Lagers, Ales, Stouts & Craft', store: 'Beer Store' },
-    { label: 'Spirits', cls: 'spirits', icon: <CatSpirits />, sub: 'Whiskey, Vodka, Rum, Gin', store: 'Liquor Store' },
-    { label: 'Wine', cls: 'wine', icon: <CatWine />, sub: 'Red, White, Rosé, Champagne', store: 'Liquor Store' },
-    { label: 'Convenience', cls: 'store', icon: <CatStore />, sub: 'Snacks, Mixers, Ice, Cups', store: 'Convenience Store' },
-  ];
 
   return (
     <>
@@ -173,6 +181,33 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ── Main Sections ── */}
+      <div className="section" style={{ paddingBottom: 0 }}>
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <div className="section-title">What can we get you?</div>
+            <div className="section-sub">Alcohol, groceries, convenience &amp; gifts — delivered.</div>
+          </div>
+          <div className="cat-grid" style={{ marginTop: 0 }}>
+            {[
+              { to: '/products', label: 'Alcohol', sub: 'Beer, wine, spirits & RTD', cls: 'wine', emoji: '🍷' },
+              { to: '/grocery', label: 'Grocery Pickup & Delivery', sub: 'Household & seniors — one-time or monthly', cls: 'store', emoji: '🛒' },
+              { to: '/products?cat=Convenience', label: 'Convenience', sub: 'Snacks, mixers, ice & more', cls: 'beer', emoji: '🏪' },
+              { to: '/gifts', label: 'Gifts', sub: 'Flowers, cards & special occasions', cls: 'spirits', emoji: '🎁' },
+            ].map(s => (
+              <Link key={s.to} to={s.to} className={`cat-card ${s.cls}`} style={{ paddingTop: 26 }}>
+                <div style={{ fontSize: 40, marginBottom: 10 }}>{s.emoji}</div>
+                <div className="cat-name">{s.label}</div>
+                <div style={{ fontSize: 12, color: 'var(--gray)', lineHeight: 1.5, marginTop: 2 }}>{s.sub}</div>
+                <div style={{ marginTop: 10, fontSize: 11, fontWeight: 700, color: 'var(--gold-dk)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                  Explore <ArrowIcon />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* ── Trust Bar ── */}
       <div style={{ background: 'white', padding: '18px 0', borderTop: '1px solid var(--gray-lt)', borderBottom: '1px solid var(--gray-lt)' }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'center', gap: 40, flexWrap: 'wrap' }}>
@@ -199,7 +234,11 @@ export default function Home() {
           <div className="cat-grid">
             {cats.map(c => (
               <Link key={c.label} to={`/products?cat=${c.label}`} className={`cat-card ${c.cls}`}>
-                <div className="cat-icon">{c.icon}</div>
+                <div className="cat-img">
+                  {c.img ? <img src={c.img} alt={c.label} loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                    : catImgs[c.label] ? <img src={catImgs[c.label]} alt={c.label} loading="lazy" />
+                    : c.fallback}
+                </div>
                 <div className="cat-name">{c.label}</div>
                 <div style={{ fontSize: 12, color: 'var(--gray)', lineHeight: 1.5, marginTop: 2 }}>{c.sub}</div>
                 <div style={{ marginTop: 10, fontSize: 11, fontWeight: 700, color: 'var(--gold-dk)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>

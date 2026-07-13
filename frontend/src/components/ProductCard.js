@@ -47,11 +47,13 @@ export default function ProductCard({ product }) {
       </div>
       <div className="prod-body">
         <div className="prod-category">{product.category}</div>
-        <div className="prod-name">{product.name}</div>
-        <div className="prod-volume">{hasVariants ? `${product.variants.length} sizes` : (product.volume || ' ')}</div>
-        <div className="prod-footer" style={{justifyContent:'center',gap:10}}>
-          <div className="prod-price">{hasVariants && <span style={{fontSize:11,fontWeight:600,color:'var(--gray)',marginRight:3}}>from</span>}<sup>$</sup>{minPrice.toFixed(2)}</div>
-          <span style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:12,fontWeight:700,color:outOfStock?'var(--red)':'var(--gold-dk)'}}>
+        <div className="prod-topline">
+          <div className="prod-name">{product.name}</div>
+          <div className="prod-price">{hasVariants && <span style={{fontSize:10,fontWeight:600,color:'var(--gray)',marginRight:2}}>from</span>}<sup>$</sup>{minPrice.toFixed(2)}</div>
+        </div>
+        <div className="prod-subline">
+          <span>{hasVariants ? `${product.variants.length} sizes` : (product.volume || ' ')}</span>
+          <span style={{display:'inline-flex',alignItems:'center',gap:3,fontWeight:700,color:outOfStock?'var(--red)':'var(--gold-dk)'}}>
             {outOfStock ? 'Out of stock' : <>View <ArrowIcon/></>}
           </span>
         </div>

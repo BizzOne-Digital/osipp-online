@@ -102,6 +102,25 @@ const parseVariants = (data) => {
   return data;
 };
 
+// POST /api/products/upload - admin: upload one image, return its URL
+router.post('/upload', protect, adminOnly, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No image provided' });
+    res.json({ success: true, url: req.file.path || req.file.location || '' });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+// PUT /api/products/:id/image - admin: set an image URL on a product
+router.put('/:id/image', protect, adminOnly, async (req, res) => {
+  try {
+    const { image } = req.body;
+    if (!image) return res.status(400).json({ success: false, message: 'image URL required' });
+    const product = await Product.findByIdAndUpdate(req.params.id, { image }, { new: true });
+    if (!product) return res.status(404).json({ success: false, message: 'Not found' });
+    res.json({ success: true, data: product });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
 // POST /api/products - admin
 router.post('/', protect, adminOnly, upload.single('image'), async (req, res) => {
   try {

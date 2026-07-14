@@ -1,4 +1,6 @@
 require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 const mongoose = require('mongoose');
 const User = require('./models/User');
 const Product = require('./models/Product');
@@ -5781,20 +5783,14 @@ const products = [
   }
 ];
 
-// Group same-name products (same category/subCategory/store) whose volume is a
-// size or pack (ml / L) into a single product with `variants`. Age-statement
-// items (12yr, 18yr, etc.) and one-off items (1 bag, 1 unit) are left as their
-// own separate products so nothing gets wrongly merged.
+// Group products that share the same name + category + subCategory + store into
+// a single product with `variants` (each size/pack/label becomes a variant).
+// Works for ml/L sizes AND non-ml labels like cigarette "Large King", etc.
 function groupIntoVariants(flat) {
-  const isSize = (v) => /\d\s*(ml|l)\b/i.test(v || '');
   const groups = new Map();
   const result = [];
 
   for (const p of flat) {
-    if (!isSize(p.volume)) {
-      result.push({ ...p, variants: [] }); // standalone product
-      continue;
-    }
     const key = [p.name, p.category, p.subCategory, p.store].join('||');
     if (!groups.has(key)) {
       const shell = { ...p, variants: [] };
@@ -5841,10 +5837,14 @@ async function seed() {
     });
     console.log('Admin created: admin@osipp.ca / osipp2024');
 
-    // Products (grouped into size/pack variants)
-    const grouped = groupIntoVariants(products);
+    // Products — use the full parsed catalog if present, else the inline list
+    const catalogPath = path.join(__dirname, 'catalogProducts.json');
+    const source = fs.existsSync(catalogPath)
+      ? JSON.parse(fs.readFileSync(catalogPath, 'utf8'))
+      : products;
+    const grouped = groupIntoVariants(source);
     const created = await Product.insertMany(grouped);
-    console.log(created.length + ' products seeded (grouped from ' + products.length + ' rows)');
+    console.log(created.length + ' products seeded (grouped from ' + source.length + ' rows)');
 
     // Settings
     await Settings.create({

@@ -50,3 +50,6 @@ uploads/
 
 # generated files
 *.pem
+# database backups (sensitive: users/customers)
+backbackups/
+backend/backups/

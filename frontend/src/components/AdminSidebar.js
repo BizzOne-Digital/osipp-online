@@ -16,6 +16,7 @@ const navItems = [
   { path: '/admin', label: 'Dashboard', icon: 'dashboard' },
   { path: '/admin/orders', label: 'Orders', icon: 'orders' },
   { path: '/admin/products', label: 'Products', icon: 'products' },
+  { path: '/admin/bulk-images', label: 'Bulk Images', icon: 'products' },
   { path: '/admin/customers', label: 'Customers', icon: 'customers' },
   { path: '/admin/services', label: 'Services', icon: 'services' },
   { path: '/admin/settings', label: 'Settings', icon: 'settings' },

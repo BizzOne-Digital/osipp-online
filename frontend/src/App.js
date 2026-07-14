@@ -28,7 +28,6 @@ import AdminOrders from './pages/admin/Orders';
 import AdminProducts from './pages/admin/Products';
 import AdminCustomers from './pages/admin/Customers';
 import AdminServices from './pages/admin/Services';
-import AdminBulkImages from './pages/admin/BulkImages';
 import AdminSettings from './pages/admin/Settings';
 
 function ScrollToTop() {
@@ -91,7 +90,6 @@ export default function App() {
           <Route path="/admin" element={<PrivateRoute><AdminLayout><AdminDashboard /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/orders" element={<PrivateRoute><AdminLayout><AdminOrders /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/products" element={<PrivateRoute><AdminLayout><AdminProducts /></AdminLayout></PrivateRoute>} />
-          <Route path="/admin/bulk-images" element={<PrivateRoute><AdminLayout><AdminBulkImages /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/customers" element={<PrivateRoute><AdminLayout><AdminCustomers /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/services" element={<PrivateRoute><AdminLayout><AdminServices /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/settings" element={<PrivateRoute><AdminLayout><AdminSettings /></AdminLayout></PrivateRoute>} />

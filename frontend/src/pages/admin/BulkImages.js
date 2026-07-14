@@ -78,20 +78,21 @@ export default function BulkImages() {
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 14 }}>
             {filtered.slice(0, show).map(p => (
-              <div key={p._id} style={{ border: `1.5px solid ${p.image ? 'var(--green)' : 'var(--gray-lt)'}`, borderRadius: 12, overflow: 'hidden', background: 'white' }}>
+              <div key={p._id} className="product-card" data-name={p.name} data-has-image={p.image ? '1' : '0'}
+                style={{ border: `1.5px solid ${p.image ? 'var(--green)' : 'var(--gray-lt)'}`, borderRadius: 12, overflow: 'hidden', background: 'white' }}>
                 <div style={{ height: 130, background: 'var(--cream)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {busy[p._id] ? <div className="spinner" />
                     : p.image ? <img src={p.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} />
                     : <span style={{ fontSize: 11, color: 'var(--gray)' }}>No image</span>}
                 </div>
                 <div style={{ padding: 12 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.3, marginBottom: 2 }}>{p.name}</div>
+                  <div className="product-name" style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.3, marginBottom: 2 }}>{p.name}</div>
                   <div style={{ fontSize: 11, color: 'var(--gray)', marginBottom: 10 }}>{p.category}{p.subCategory ? ` · ${p.subCategory}` : ''}</div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => copyName(p.name)} className="adm-btn-outline-s" style={{ flex: 1, fontSize: 12 }}>
+                    <button onClick={() => copyName(p.name)} className="copy-btn adm-btn-outline-s" style={{ flex: 1, fontSize: 12 }}>
                       {copied === p.name ? 'Copied!' : 'Copy'}
                     </button>
-                    <label className="adm-btn adm-btn-gold" style={{ flex: 1, cursor: 'pointer', fontSize: 12, textAlign: 'center', justifyContent: 'center' }}>
+                    <label className="upload-btn adm-btn adm-btn-gold" style={{ flex: 1, cursor: 'pointer', fontSize: 12, textAlign: 'center', justifyContent: 'center' }}>
                       {p.image ? 'Replace' : 'Upload'}
                       <input type="file" accept="image/*" onChange={e => onFile(p, e.target.files?.[0])} style={{ display: 'none' }} />
                     </label>

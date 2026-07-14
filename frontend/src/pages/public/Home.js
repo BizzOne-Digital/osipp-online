@@ -82,19 +82,18 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Hero (White/Cream) ── */}
+      {/* ── Hero (Background image) ── */}
       <div className="hero fade-up">
         <img
-          src={process.env.PUBLIC_URL + '/images/hero-banner.png'}
+          className="hero-bg-img"
+          src={process.env.PUBLIC_URL + '/hero.png'}
           alt=""
           aria-hidden="true"
-          style={{
-            position: 'absolute', inset: 0, width: '100%', height: '100%',
-            objectFit: 'cover', opacity: 0.12, pointerEvents: 'none', zIndex: 0
-          }}
         />
-        <div className="container hero-grid">
-          <div>
+        {/* readability overlay — strong on the left (text), clears out on the right (image) */}
+        <div className="hero-overlay" />
+        <div className="container" style={{ position: 'relative', zIndex: 1, width: '100%' }}>
+          <div style={{ maxWidth: 620 }}>
             <div className="hero-eyebrow">
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ADE80', display: 'inline-block' }} />
               Delivering in Mississauga & GTA
@@ -132,37 +131,6 @@ export default function Home() {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-
-          <div className="hero-right">
-            <div style={{
-              background: 'white', border: '2px solid var(--gold)', borderRadius: 16,
-              padding: 28, textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,.08)'
-            }}>
-              <img src={process.env.PUBLIC_URL + '/images/logo.png'} alt="O'SIPP" style={{ height: 80, marginBottom: 16 }} />
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--gold-dk)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-                Alcohol Delivery Service
-              </div>
-              <div style={{
-                background: 'var(--cream)', borderRadius: 10, padding: '14px 20px', marginBottom: 14,
-                border: '1px solid var(--gray-lt)', fontSize: 13, color: 'var(--gray)', lineHeight: 1.7
-              }}>
-                <strong style={{ color: 'var(--gold-dk)' }}>19+ ID Required at Delivery</strong><br />
-                Drink Responsibly
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {[{ l: 'Fast', i: <TruckIcon /> }, { l: 'Reliable', i: <ShieldIcon /> }, { l: 'Responsible', i: <MapPinIcon /> }].map((t, i) => (
-                  <div key={i} style={{
-                    flex: 1, padding: '10px 6px', borderRadius: 8, background: 'var(--cream)',
-                    textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'var(--gold-dk)',
-                    textTransform: 'uppercase', letterSpacing: 0.3
-                  }}>
-                    <div style={{ color: 'var(--gold)', marginBottom: 4, display: 'flex', justifyContent: 'center' }}>{t.i}</div>
-                    {t.l}
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </div>

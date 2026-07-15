@@ -99,7 +99,7 @@ export default function Home() {
               Delivering in Mississauga & GTA
             </div>
             <h1 className="hero-title">
-              Alcohol Delivery<br />Service <span className="gold">In Your City</span>
+              O'SIPP Alcohol Delivery<br />Service <span className="gold">In Your City</span>
             </h1>
             <p className="hero-subtitle">
               Beer, wine, spirits & convenience store products delivered to your door in about 40 minutes. 19+ ID required at delivery.
@@ -158,13 +158,15 @@ export default function Home() {
           </div>
           <div className="cat-grid" style={{ marginTop: 0 }}>
             {[
-              { to: '/products', label: 'Alcohol', sub: 'Beer, wine, spirits & RTD', cls: 'wine', emoji: '🍷' },
-              { to: '/grocery', label: 'Grocery Pickup & Delivery', sub: 'Household & seniors — one-time or monthly', cls: 'store', emoji: '🛒' },
-              { to: '/products?cat=Convenience', label: 'Convenience', sub: 'Snacks, mixers, ice & more', cls: 'beer', emoji: '🏪' },
-              { to: '/gifts', label: 'Gifts', sub: 'Flowers, cards & special occasions', cls: 'spirits', emoji: '🎁' },
+              { to: '/products', label: 'Alcohol', sub: 'Beer, wine, spirits & RTD', cls: 'wine', img: '/images/alcohal.png' },
+              { to: '/grocery', label: 'Grocery Pickup & Delivery', sub: 'Household & seniors — one-time or monthly', cls: 'store', img: '/images/grocery.png' },
+              { to: '/products?cat=Convenience', label: 'Convenience', sub: 'Snacks, mixers, ice & more', cls: 'beer', img: '/images/convenience.png' },
+              { to: '/gifts', label: 'Gifts', sub: 'Flowers, cards & special occasions', cls: 'spirits', img: '/images/gift.png' },
             ].map(s => (
               <Link key={s.to} to={s.to} className={`cat-card ${s.cls}`} style={{ paddingTop: 26 }}>
-                <div style={{ fontSize: 40, marginBottom: 10 }}>{s.emoji}</div>
+                <div style={{ height: 96, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
+                  <img src={process.env.PUBLIC_URL + s.img} alt={s.label} style={{ maxHeight: 96, maxWidth: 120, objectFit: 'contain' }} />
+                </div>
                 <div className="cat-name">{s.label}</div>
                 <div style={{ fontSize: 12, color: 'var(--gray)', lineHeight: 1.5, marginTop: 2 }}>{s.sub}</div>
                 <div style={{ marginTop: 10, fontSize: 11, fontWeight: 700, color: 'var(--gold-dk)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>

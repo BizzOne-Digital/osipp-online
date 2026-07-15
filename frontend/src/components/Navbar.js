@@ -18,7 +18,10 @@ export default function Navbar({ onCartOpen }) {
   return (
     <nav className="nav">
       <div className="container nav-inner">
-        <Link to="/" className="nav-logo"><img src="/images/logo.png" alt="O'SIPP" style={{height:46,width:'auto',objectFit:'contain'}}/></Link>
+        <Link to="/" className="nav-logo">
+          <img src="/images/logo.png" alt="O'SIPP" style={{height:46,width:'auto',objectFit:'contain'}}/>
+          <span className="nav-logo-text">O'SIPP <span>Delivery</span></span>
+        </Link>
         <div className="nav-links">{links.map(l=><Link key={l.to} to={l.to} className={`nav-link${pathname===l.to?' active':''}`}>{l.label}</Link>)}</div>
         <div className="nav-actions">
           <button className="btn-icon" onClick={onCartOpen}><CartIcon/>{itemCount>0 && <span className="cart-badge">{itemCount}</span>}</button>

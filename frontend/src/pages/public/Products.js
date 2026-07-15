@@ -26,7 +26,6 @@ export default function Products() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [subCategories, setSubCategories] = useState([]);
   const [selectedSub, setSelectedSub] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
 
   const fetchProducts = useCallback(async (pageNum = 1, append = false) => {
     if (pageNum === 1) setLoading(true); else setLoadingMore(true);
@@ -85,12 +84,6 @@ export default function Products() {
             {CATS.map(c => <button key={c} className={`filter-btn${filter === c ? ' active' : ''}`} onClick={() => { setFilter(c); setSelectedSub(''); }}>{c}</button>)}
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {subCategories.length > 0 && (
-              <button onClick={() => setShowFilters(!showFilters)}
-                style={{ padding: '7px 14px', border: '1.5px solid var(--gray-lt)', borderRadius: 6, background: showFilters ? 'var(--black)' : 'white', color: showFilters ? 'white' : 'var(--gray)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                Filters {selectedSub ? ' ●' : ''}
-              </button>
-            )}
             <select value={sort} onChange={e => setSort(e.target.value)}
               style={{ padding: '7px 12px', border: '1.5px solid var(--gray-lt)', borderRadius: 6, fontSize: 12, cursor: 'pointer', background: 'white' }}>
               {SORTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
@@ -98,7 +91,7 @@ export default function Products() {
           </div>
         </div>
 
-        {showFilters && subCategories.length > 0 && (
+        {subCategories.length > 0 && (
           <div style={{ background: 'var(--cream)', border: '1px solid var(--gray-lt)', borderRadius: 'var(--r-md)', padding: '16px 20px', marginBottom: 20 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Sub Category</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>

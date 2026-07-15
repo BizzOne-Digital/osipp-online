@@ -133,8 +133,23 @@ export default function ProductDetail() {
             <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
               <div className="qty-ctrl" style={{ border: '1.5px solid var(--gray-lt)', borderRadius: 8 }}>
                 <button className="qty-btn" onClick={() => setQty(q => Math.max(1, q - 1))}><MinusIcon /></button>
-                <span className="qty-num" style={{ minWidth: 36, textAlign: 'center' }}>{qty}</span>
-                <button className="qty-btn" onClick={() => setQty(q => Math.min(stock || 99, q + 1))}><PlusIcon /></button>
+                <input
+                  className="qty-num"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={stock || 99}
+                  value={qty}
+                  onChange={e => {
+                    const v = e.target.value;
+                    if (v === '') { setQty(''); return; }
+                    const n = parseInt(v, 10);
+                    if (!Number.isNaN(n)) setQty(Math.max(1, Math.min(stock || 99, n)));
+                  }}
+                  onBlur={() => setQty(q => (q === '' || Number.isNaN(Number(q))) ? 1 : q)}
+                  style={{ minWidth: 36, width: 48, textAlign: 'center', border: 'none', outline: 'none', background: 'transparent', fontSize: 14, fontWeight: 600, MozAppearance: 'textfield' }}
+                />
+                <button className="qty-btn" onClick={() => setQty(q => Math.min(stock || 99, (q === '' ? 0 : Number(q)) + 1))}><PlusIcon /></button>
               </div>
               <button className="btn-outline" style={{ flex: 1, minWidth: 180, justifyContent: 'center', padding: '14px 24px' }} onClick={handleAdd} disabled={outOfStock}>
                 {added ? <><CheckIcon /> Added</> : outOfStock ? 'Out of Stock' : <>Add to Cart</>}

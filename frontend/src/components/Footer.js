@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="footer-grid">
           <div>
             <img src="/images/logo.png" alt="O'SIPP Delivery" style={{ height: 56, width: 'auto', objectFit: 'contain', marginBottom: 14 }} />
-            <div className="footer-desc">Alcohol delivery service in Mississauga & GTA. $13 delivery (taxes included). Delivery in about 40 minutes. 19+ ID required.</div>
+            <div className="footer-desc">Alcohol delivery service in Mississauga & GTA. $13 delivery (taxes included). Delivery in about 1 hour. 19+ ID required.</div>
             <div className="footer-socials">
               <button className="social-btn" onClick={() => window.open('https://www.instagram.com/osipp_delivery', '_blank')}><InstagramIcon /></button>
               <button className="social-btn" onClick={() => window.open('https://wa.me/19054622160', '_blank')}><WhatsAppIcon /></button>

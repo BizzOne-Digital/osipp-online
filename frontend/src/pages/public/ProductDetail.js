@@ -80,7 +80,7 @@ export default function ProductDetail() {
           <div className="pd-image">
             {product.badge && <span className={`prod-badge${product.badge === 'Sale' ? ' sale' : ''}`} style={{ top: 16, left: 16 }}>{product.badge}</span>}
             {product.image && !imgError
-              ? <img src={product.image} alt={product.name} onError={() => setImgError(true)} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 18 }} />
+              ? <img src={product.image} alt={product.name} onError={() => setImgError(true)} style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', objectFit: 'contain', padding: 18 }} />
               : <BottleSVG cat={product.category} />}
           </div>
 
@@ -167,7 +167,7 @@ export default function ProductDetail() {
 
             {/* Trust badges */}
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', padding: '18px 0', borderTop: '1px solid var(--gray-lt)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--gray)', fontWeight: 600 }}><span style={{ color: 'var(--gold)' }}><TruckIcon /></span> ~40 min delivery</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--gray)', fontWeight: 600 }}><span style={{ color: 'var(--gold)' }}><TruckIcon /></span> ~1 hour delivery</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--gray)', fontWeight: 600 }}><span style={{ color: 'var(--gold)' }}><ShieldIcon /></span> 19+ ID required</div>
             </div>
           </div>

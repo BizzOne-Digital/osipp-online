@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const ServiceRequest = require('../models/ServiceRequest');
 const { protect, adminOnly } = require('../middleware/auth');
+const { sendMail } = require('../utils/mailer');
 
 // POST /api/services - public: submit a grocery / membership / gift request
 router.post('/', async (req, res) => {
@@ -13,6 +14,21 @@ router.post('/', async (req, res) => {
     if (req.user) data.user = req.user._id;
     const request = await ServiceRequest.create(data);
     res.status(201).json({ success: true, data: request });
+
+    sendMail(
+      `New ${kind} Request — ${customer.name}`,
+      `<h2>New ${kind} Request</h2>
+       <p><b>Request ID:</b> ${request.requestId || request._id}</p>
+       <p><b>Name:</b> ${customer.name}</p>
+       <p><b>Phone:</b> ${customer.phone}</p>
+       ${customer.email ? `<p><b>Email:</b> ${customer.email}</p>` : ''}
+       ${customer.address ? `<p><b>Address:</b> ${customer.address}, ${customer.city || ''} ${customer.postalCode || ''}</p>` : ''}
+       ${req.body.groceryType ? `<p><b>Type:</b> ${req.body.groceryType}</p>` : ''}
+       ${req.body.plan ? `<p><b>Plan:</b> ${req.body.plan}</p>` : ''}
+       ${req.body.items ? `<p><b>List:</b> ${req.body.items}</p>` : ''}
+       ${req.body.giftDetails ? `<p><b>Gift:</b> ${req.body.giftDetails}</p>` : ''}
+       ${req.body.notes ? `<p><b>Notes:</b> ${req.body.notes}</p>` : ''}`
+    );
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 

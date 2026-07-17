@@ -137,7 +137,7 @@ export default function Settings() {
               <div className="form-group"><label className="form-label">Fee Note</label><input className="form-input" value={settings.deliveryFeeNote || ''} onChange={e => upd('deliveryFeeNote', e.target.value)} placeholder="Taxes included" /></div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">Delivery Time</label><input className="form-input" value={settings.deliveryTime || ''} onChange={e => upd('deliveryTime', e.target.value)} placeholder="40 minutes" /></div>
+              <div className="form-group"><label className="form-label">Delivery Time</label><input className="form-input" value={settings.deliveryTime || ''} onChange={e => upd('deliveryTime', e.target.value)} placeholder="1 hour" /></div>
               <div className="form-group"><label className="form-label">Min Order ($)</label><input className="form-input" type="number" value={settings.minOrder} onChange={e => upd('minOrder', parseFloat(e.target.value))} /></div>
             </div>
             <div className="form-group"><label className="form-label">Age Requirement</label><input className="form-input" value={settings.ageRequirement || ''} onChange={e => upd('ageRequirement', e.target.value)} /></div>

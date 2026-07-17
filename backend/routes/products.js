@@ -80,6 +80,19 @@ router.get('/all', protect, adminOnly, async (req, res) => {
   }
 });
 
+// GET /api/products/subcategories - public - all subcategories for a category (not just the current page)
+router.get('/subcategories', async (req, res) => {
+  try {
+    const { category } = req.query;
+    const filter = { isActive: true };
+    if (category && category !== 'All') filter.category = category;
+    const subs = await Product.distinct('subCategory', filter);
+    res.json({ success: true, data: subs.filter(Boolean).sort() });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // GET /api/products/:id
 router.get('/:id', async (req, res) => {
   try {

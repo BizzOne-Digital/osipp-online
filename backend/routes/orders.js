@@ -4,6 +4,7 @@ const Product = require('../models/Product');
 const Coupon = require('../models/Coupon');
 const Settings = require('../models/Settings');
 const { protect, adminOnly } = require('../middleware/auth');
+const { sendMail } = require('../utils/mailer');
 
 const r2 = (n) => Math.round(n * 100) / 100;
 
@@ -120,6 +121,20 @@ router.post('/', async (req, res) => {
     });
 
     res.status(201).json({ success: true, data: order });
+
+    const itemsHtml = orderItems.map(i => `<li>${i.quantity} x ${i.name}${i.variantLabel ? ` (${i.variantLabel})` : ''} — $${(i.price * i.quantity).toFixed(2)}</li>`).join('');
+    sendMail(
+      `New Order ${order.orderId} — $${total.toFixed(2)}`,
+      `<h2>New Order Received</h2>
+       <p><b>Order ID:</b> ${order.orderId}</p>
+       <p><b>Customer:</b> ${customer.name} — ${customer.phone}${customer.email ? ` — ${customer.email}` : ''}</p>
+       <p><b>Address:</b> ${customer.address || ''}, ${customer.city || ''} ${customer.postalCode || ''}</p>
+       <p><b>Payment:</b> ${paymentMethod || 'cash'}</p>
+       <ul>${itemsHtml}</ul>
+       <p><b>Subtotal:</b> $${subtotal.toFixed(2)} | <b>Delivery:</b> $${deliveryFee.toFixed(2)} | <b>Tip:</b> $${tipAmount.toFixed(2)} | <b>Total:</b> $${total.toFixed(2)}</p>
+       ${notes ? `<p><b>Notes:</b> ${notes}</p>` : ''}
+       ${driverInstructions ? `<p><b>Driver instructions:</b> ${driverInstructions}</p>` : ''}`
+    );
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 

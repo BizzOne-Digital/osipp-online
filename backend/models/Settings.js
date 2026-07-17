@@ -41,7 +41,7 @@ const settingsSchema = new mongoose.Schema({
   tipEnabled: { type: Boolean, default: true },
   tipPresets: { type: [Number], default: [3, 5, 10] },
   deliveryFeeNote: { type: String, default: 'Taxes included' },
-  deliveryTime: { type: String, default: '40 minutes' },
+  deliveryTime: { type: String, default: '1 hour' },
   ageRequirement: { type: String, default: '19+ ID required at delivery' },
   deliveryHours: {
     monThu: { type: String, default: '11am – 11pm' },

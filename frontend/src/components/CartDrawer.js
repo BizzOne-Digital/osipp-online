@@ -170,12 +170,13 @@ export default function CartDrawer({ onClose }) {
             {['cash','card','interac'].map(m=>(<div key={m} className={`pay-opt${payMethod===m?' selected':''}`} onClick={()=>setPayMethod(m)}><div className="pay-opt-name">{m==='cash'?'Cash on Delivery':m==='card'?'Credit / Debit':'Interac e-Transfer'}</div></div>))}
           </div>
           <div style={{display:'flex',gap:10,marginTop:8}}><button className="btn-outline" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep('details')}>Back</button><button className="btn-checkout" style={{flex:2}} onClick={placeOrder} disabled={loading}>{loading?'Placing...': `Place Order · $${total.toFixed(2)}`}</button></div>
+          <p style={{fontSize:12,color:'var(--gray)',textAlign:'center',marginTop:10}}>If your product is not here, please let us know by text or call.</p>
         </div>}
 
         {step === 'success' && <div className="success-screen" style={{flex:1,display:'flex',flexDirection:'column',justifyContent:'center'}}>
           <svg width="72" height="72" viewBox="0 0 72 72" fill="none" style={{margin:'0 auto 20px'}}><circle cx="36" cy="36" r="36" fill="#DCFCE7"/><path d="M22 36l10 10 18-18" stroke="#16A34A" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           <div className="success-title">Order Placed!</div>
-          <p className="success-sub">Delivery in about 40 minutes. 19+ ID required.</p>
+          <p className="success-sub">Delivery in about 1 hour. 19+ ID required.</p>
           <div className="order-id">{orderId}</div>
           <button className="btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={onClose}>Continue Shopping</button>
         </div>}

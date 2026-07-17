@@ -6,19 +6,12 @@ import { SearchIcon, CloseIcon } from '../../components/Icons';
 
 const API = process.env.REACT_APP_API_URL || '/api';
 const CATS = ['All', 'Spirits', 'Wine', 'Beer', 'Ready To Drink', 'Convenience'];
-const SORTS = [
-  { value: '-createdAt', label: 'Newest' },
-  { value: 'price', label: 'Price: Low to High' },
-  { value: '-price', label: 'Price: High to Low' },
-  { value: 'name', label: 'Name: A-Z' },
-];
 
 export default function Products() {
   const [params] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [filter, setFilter] = useState(params.get('cat') || 'All');
   const [search, setSearch] = useState(params.get('search') || '');
-  const [sort, setSort] = useState('-createdAt');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [total, setTotal] = useState(0);
@@ -34,7 +27,7 @@ export default function Products() {
       if (filter !== 'All') q.set('category', filter);
       if (search) q.set('search', search);
       if (selectedSub) q.set('subCategory', selectedSub);
-      q.set('sort', sort);
+      q.set('sort', 'name');
       q.set('page', pageNum);
       q.set('limit', 24);
 
@@ -50,18 +43,20 @@ export default function Products() {
       setHasMore(more);
       setPage(pageNum);
 
-      if (!append && items.length > 0) {
-        const subs = [...new Set(items.map(p => p.subCategory).filter(Boolean))].sort();
-        setSubCategories(subs);
-      }
     } catch (err) {
       console.error('Products fetch error:', err.message);
       if (!append) setProducts([]);
     }
     setLoading(false); setLoadingMore(false);
-  }, [filter, search, sort, selectedSub]);
+  }, [filter, search, selectedSub]);
 
-  useEffect(() => { setPage(1); fetchProducts(1, false); }, [filter, search, sort, selectedSub]);
+  useEffect(() => { setPage(1); fetchProducts(1, false); }, [filter, search, selectedSub]);
+
+  useEffect(() => {
+    axios.get(`${API}/products/subcategories?category=${encodeURIComponent(filter)}`)
+      .then(res => setSubCategories(res.data?.data || []))
+      .catch(() => setSubCategories([]));
+  }, [filter]);
 
   const loadMore = () => fetchProducts(page + 1, true);
 
@@ -79,16 +74,8 @@ export default function Products() {
           {search && <button className="btn-close" onClick={() => setSearch('')} style={{ border: 'none' }}><CloseIcon /></button>}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-          <div className="prod-filters" style={{ marginBottom: 0 }}>
-            {CATS.map(c => <button key={c} className={`filter-btn${filter === c ? ' active' : ''}`} onClick={() => { setFilter(c); setSelectedSub(''); }}>{c}</button>)}
-          </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <select value={sort} onChange={e => setSort(e.target.value)}
-              style={{ padding: '7px 12px', border: '1.5px solid var(--gray-lt)', borderRadius: 6, fontSize: 12, cursor: 'pointer', background: 'white' }}>
-              {SORTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
-          </div>
+        <div className="prod-filters" style={{ marginBottom: 16 }}>
+          {CATS.map(c => <button key={c} className={`filter-btn${filter === c ? ' active' : ''}`} onClick={() => { setFilter(c); setSelectedSub(''); }}>{c}</button>)}
         </div>
 
         {subCategories.length > 0 && (

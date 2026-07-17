@@ -102,7 +102,7 @@ export default function Home() {
               O'SIPP Alcohol Delivery<br />Service <span className="gold">In Your City</span>
             </h1>
             <p className="hero-subtitle">
-              Beer, wine, spirits & convenience store products delivered to your door in about 40 minutes. 19+ ID required at delivery.
+              Beer, wine, spirits & convenience store products delivered to your door in about 1 hour. 19+ ID required at delivery.
             </p>
             <div className="hero-ctas">
               <Link to="/products" className="btn-primary">Shop Now <ArrowIcon /></Link>
@@ -117,7 +117,7 @@ export default function Home() {
               {[
                 { icon: <TruckIcon />, title: '$13 Delivery', sub: 'Taxes included' },
                 { icon: <PhoneIcon />, title: '905-462-2160', sub: 'Call or text' },
-                { icon: <MapPinIcon />, title: '40 Minutes', sub: 'Fast delivery' },
+                { icon: <MapPinIcon />, title: '1 Hour', sub: 'Fast delivery' },
               ].map((b, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{
@@ -250,7 +250,7 @@ export default function Home() {
               { n: '01', icon: <SearchIcon />, t: 'Browse & Search', d: 'Find your favourite beers, spirits, wines and more from 3 local stores.' },
               { n: '02', icon: <CartIcon />, t: 'Add to Cart', d: 'Select products, pick quantities and review your order before checkout.' },
               { n: '03', icon: <MapPinIcon />, t: 'Enter Address', d: 'Provide your Mississauga/GTA address. Choose cash, card or Interac.' },
-              { n: '04', icon: <TruckIcon />, t: '40 Min Delivery', d: 'We pick, pack and deliver to your door. 19+ ID required at delivery.' },
+              { n: '04', icon: <TruckIcon />, t: '1 Hour Delivery', d: 'We pick, pack and deliver to your door. 19+ ID required at delivery.' },
             ].map(s => (
               <div key={s.n} className="how-step">
                 <div className="how-num">{s.n}</div>
@@ -270,7 +270,7 @@ export default function Home() {
             Ready to Order?
           </h2>
           <p style={{ color: 'var(--gray)', fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
-            Call or text <strong>905-462-2160</strong> or order online. $13 delivery (taxes included). Delivery in about 40 minutes to Mississauga & GTA.
+            Call or text <strong>905-462-2160</strong> or order online. $13 delivery (taxes included). Delivery in about 1 hour to Mississauga & GTA.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
             <Link to="/products" className="btn-primary" style={{ padding: '15px 32px', fontSize: 16 }}>Browse Products <ArrowIcon /></Link>

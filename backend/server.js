@@ -58,9 +58,10 @@ app.use((err, req, res, next) => {
 
 // Local dev only
 if (!process.env.VERCEL) {
+  const { verifyMailer } = require('./utils/mailer');
   const PORT = process.env.PORT || 5000;
   connectDB()
-    .then(() => { console.log('MongoDB Connected'); app.listen(PORT, () => console.log(`Server on port ${PORT}`)); })
+    .then(() => { console.log('MongoDB Connected'); verifyMailer(); app.listen(PORT, () => console.log(`Server on port ${PORT}`)); })
     .catch(err => { console.error(err); process.exit(1); });
 }
 

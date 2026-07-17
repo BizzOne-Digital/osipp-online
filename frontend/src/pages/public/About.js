@@ -22,7 +22,7 @@ export default function About() {
             </p>
           </div>
           <div className="about-stats">
-            {[['40min', 'Delivery Time'], ['$13', 'Flat Delivery Fee'], ['19+', 'ID Required']].map(([n, l]) => (
+            {[['1hr', 'Delivery Time'], ['$13', 'Flat Delivery Fee'], ['19+', 'ID Required']].map(([n, l]) => (
               <div key={l} className="about-stat"><div className="about-stat-num">{n}</div><div className="about-stat-lbl">{l}</div></div>
             ))}
           </div>
@@ -42,7 +42,7 @@ export default function About() {
             </div>
             <div className="about-cta-box">
               <div style={{ fontFamily: 'var(--font-d)', fontSize: 20, fontWeight: 800, color: 'white', marginBottom: 8 }}>Ready to Order?</div>
-              <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 13, marginBottom: 12, lineHeight: 1.6 }}>$13 delivery fee (taxes included). Delivery in about 40 minutes to Mississauga & GTA.</p>
+              <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 13, marginBottom: 12, lineHeight: 1.6 }}>$13 delivery fee (taxes included). Delivery in about 1 hour to Mississauga & GTA.</p>
               <p style={{ color: 'rgba(255,255,255,.4)', fontSize: 12, marginBottom: 24 }}>19+ Only. ID required. Drink responsibly.</p>
               <Link to="/products" className="btn-primary">Shop Now <ArrowIcon /></Link>
             </div>

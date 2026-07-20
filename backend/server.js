@@ -11,7 +11,12 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
   credentials: true
 }));
-app.use(express.json({ limit: '10mb' }));
+// Stripe webhook needs the raw body for signature verification, so it must skip the global JSON parser below.
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
+app.use((req, res, next) => {
+  if (req.path === '/api/payments/webhook') return next();
+  express.json({ limit: '10mb' })(req, res, next);
+});
 
 // ── MongoDB connection (cached for serverless) ──
 let isConnected = false;
@@ -41,6 +46,7 @@ app.use(async (req, res, next) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/payments', require('./routes/payments'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/customers', require('./routes/customers'));

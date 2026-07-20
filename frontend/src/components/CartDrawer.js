@@ -28,16 +28,21 @@ export default function CartDrawer({ onClose }) {
   const placeOrder = async () => {
     if (!form.name || !form.phone || !form.address) return alert('Fill required fields');
     setLoading(true);
+    const orderBody = {
+      customer: form,
+      items: items.map(i => ({ product: i._id, quantity: i.qty, variantIndex: i.variantIndex })),
+      addOns: addOns.map(a => ({ name: a.name, quantity: a.quantity })),
+      tip: parseFloat(tip) || 0,
+      driverInstructions,
+      couponCode: coupon?.code || ''
+    };
     try {
-      const res = await axios.post(`${API}/orders`, {
-        customer: form,
-        items: items.map(i => ({ product: i._id, quantity: i.qty, variantIndex: i.variantIndex })),
-        addOns: addOns.map(a => ({ name: a.name, quantity: a.quantity })),
-        tip: parseFloat(tip) || 0,
-        driverInstructions,
-        paymentMethod: payMethod,
-        couponCode: coupon?.code || ''
-      });
+      if (payMethod === 'stripe') {
+        const res = await axios.post(`${API}/payments/create-checkout-session`, orderBody);
+        window.location.href = res.data.url; // redirect to Stripe Checkout; cart clears on return
+        return;
+      }
+      const res = await axios.post(`${API}/orders`, { ...orderBody, paymentMethod: payMethod });
       setOrderId(res.data.data.orderId);
       clearCart(); setStep('success');
     } catch (err) { alert(err.response?.data?.message || 'Order failed'); }
@@ -167,9 +172,9 @@ export default function CartDrawer({ onClose }) {
 
           <div className="form-label" style={{marginBottom:10}}>Payment Method</div>
           <div className="payment-options">
-            {['cash','card','interac'].map(m=>(<div key={m} className={`pay-opt${payMethod===m?' selected':''}`} onClick={()=>setPayMethod(m)}><div className="pay-opt-name">{m==='cash'?'Cash on Delivery':m==='card'?'Credit / Debit':'Interac e-Transfer'}</div></div>))}
+            {['cash','stripe','interac'].map(m=>(<div key={m} className={`pay-opt${payMethod===m?' selected':''}`} onClick={()=>setPayMethod(m)}><div className="pay-opt-name">{m==='cash'?'Cash on Delivery':m==='stripe'?'Pay Online (Card)':'Interac e-Transfer'}</div></div>))}
           </div>
-          <div style={{display:'flex',gap:10,marginTop:8}}><button className="btn-outline" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep('details')}>Back</button><button className="btn-checkout" style={{flex:2}} onClick={placeOrder} disabled={loading}>{loading?'Placing...': `Place Order · $${total.toFixed(2)}`}</button></div>
+          <div style={{display:'flex',gap:10,marginTop:8}}><button className="btn-outline" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep('details')}>Back</button><button className="btn-checkout" style={{flex:2}} onClick={placeOrder} disabled={loading}>{loading?(payMethod==='stripe'?'Redirecting...':'Placing...'): payMethod==='stripe'?`Pay $${total.toFixed(2)}`:`Place Order · $${total.toFixed(2)}`}</button></div>
           <p style={{fontSize:12,color:'var(--gray)',textAlign:'center',marginTop:10}}>If your product is not here, please let us know by text or call.</p>
         </div>}
 

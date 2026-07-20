@@ -17,6 +17,7 @@ import Gifts from './pages/public/Gifts';
 import Contact from './pages/public/Contact';
 import About from './pages/public/About';
 import Tracking from './pages/public/Tracking';
+import OrderSuccess from './pages/public/OrderSuccess';
 import CustomerLogin from './pages/public/CustomerLogin';
 import CustomerRegister from './pages/public/CustomerRegister';
 import Account from './pages/public/Account';
@@ -74,6 +75,7 @@ export default function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/tracking" element={<Tracking />} />
+            <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/login" element={<CustomerLogin />} />
             <Route path="/register" element={<CustomerRegister />} />
             <Route path="/account" element={<Account />} />

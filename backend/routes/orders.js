@@ -1,116 +1,26 @@
 const router = require('express').Router();
 const Order = require('../models/Order');
 const Product = require('../models/Product');
-const Coupon = require('../models/Coupon');
-const Settings = require('../models/Settings');
 const { protect, adminOnly } = require('../middleware/auth');
 const { sendMail } = require('../utils/mailer');
-
-const r2 = (n) => Math.round(n * 100) / 100;
+const { buildOrderPayload, commitStock } = require('../utils/orderBuilder');
 
 // POST /api/orders - place order with optional coupon, add-ons, tip, stop-based delivery
 router.post('/', async (req, res) => {
   try {
     const { customer, items, paymentMethod, notes, couponCode, addOns, tip, driverInstructions } = req.body;
-    if (!customer || !items || items.length === 0) return res.status(400).json({ success: false, message: 'Customer info and items required' });
 
-    // Load settings once (used for delivery fees, tip, and add-on pricing)
-    let settings = await Settings.findOne();
-    if (!settings) settings = await Settings.create({});
+    const payload = await buildOrderPayload({ customer, items, addOns, tip, couponCode });
+    const { orderItems, orderAddOns, subtotal, discount, couponApplied, couponDoc, deliveryFee, deliveryStops, tipAmount, total, stockUpdates } = payload;
 
-    let subtotal = 0;
-    const orderItems = [];
-    const stores = new Set();          // distinct stores => delivery stops
-    const stockUpdates = [];           // apply only after all validation passes
-
-    for (const item of items) {
-      const product = await Product.findById(item.product);
-      if (!product) return res.status(404).json({ success: false, message: `Product not found` });
-
-      // Resolve variant (size) if selected — price/label/stock come from the server, not the client.
-      let unitPrice = product.price;
-      let variantLabel = '';
-      let volume = product.volume;
-      const vIdx = item.variantIndex;
-      if (vIdx !== undefined && vIdx !== null && vIdx !== '' && product.variants && product.variants[vIdx]) {
-        const v = product.variants[vIdx];
-        unitPrice = v.price;
-        variantLabel = v.label;
-        volume = v.label || product.volume;
-        if (v.stock < item.quantity) return res.status(400).json({ success: false, message: `${product.name} (${v.label}) out of stock` });
-        stockUpdates.push({ id: product._id, variantIndex: vIdx, qty: item.quantity });
-      } else {
-        if (product.stock < item.quantity) return res.status(400).json({ success: false, message: `${product.name} out of stock` });
-        stockUpdates.push({ id: product._id, variantIndex: null, qty: item.quantity });
-      }
-
-      orderItems.push({ product: product._id, name: product.name, price: unitPrice, quantity: item.quantity, volume, variantLabel, store: product.store });
-      subtotal += unitPrice * item.quantity;
-      if (product.store) stores.add(product.store);
+    if (couponDoc) {
+      couponDoc.usedCount += 1;
+      if (req.user) couponDoc.usedBy.push(req.user._id);
+      await couponDoc.save();
     }
-
-    // Validate add-ons against admin-configured list (price is taken from settings, not the client)
-    const orderAddOns = [];
-    let addOnsTotal = 0;
-    if (Array.isArray(addOns)) {
-      for (const a of addOns) {
-        const match = (settings.addOns || []).find(s => s.name === a.name && s.isActive);
-        if (!match) continue;
-        const qty = Math.max(1, parseInt(a.quantity) || 1);
-        orderAddOns.push({ name: match.name, price: match.price, quantity: qty });
-        addOnsTotal += match.price * qty;
-      }
-    }
-
-    subtotal = r2(subtotal + addOnsTotal);
-
-    // Apply coupon
-    let discount = 0;
-    let couponApplied = '';
-    if (couponCode) {
-      const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
-      if (coupon && subtotal >= coupon.minOrder) {
-        discount = coupon.type === 'percentage' ? (subtotal * coupon.value / 100) : coupon.value;
-        if (coupon.maxDiscount && discount > coupon.maxDiscount) discount = coupon.maxDiscount;
-        discount = r2(discount);
-        coupon.usedCount += 1;
-        if (req.user) coupon.usedBy.push(req.user._id);
-        await coupon.save();
-        couponApplied = coupon.code;
-      }
-    }
-
-    // Delivery fee: per-stop (sum of each distinct store's fee) or flat fallback
-    const deliveryStops = [];
-    let deliveryFee = 0;
-    if (subtotal > 0) {
-      const feeMap = settings.storeDeliveryFees || {};
-      if (settings.useStopBasedDelivery) {
-        for (const store of stores) {
-          const fee = feeMap[store] != null ? feeMap[store] : settings.deliveryFee;
-          deliveryStops.push({ store, fee });
-          deliveryFee += fee;
-        }
-      } else {
-        deliveryFee = settings.deliveryFee;
-      }
-    }
-    deliveryFee = r2(deliveryFee);
-
-    // Driver tip
-    let tipAmount = Math.max(0, parseFloat(tip) || 0);
-    tipAmount = r2(tipAmount);
-
-    const total = r2(Math.max(0, subtotal - discount + deliveryFee + tipAmount));
 
     // All validation passed — commit stock changes
-    for (const u of stockUpdates) {
-      if (u.variantIndex !== null) {
-        await Product.findByIdAndUpdate(u.id, { $inc: { [`variants.${u.variantIndex}.stock`]: -u.qty } });
-      } else {
-        await Product.findByIdAndUpdate(u.id, { $inc: { stock: -u.qty } });
-      }
-    }
+    await commitStock(stockUpdates);
 
     const order = await Order.create({
       customer, items: orderItems, addOns: orderAddOns, subtotal, discount, couponCode: couponApplied,
@@ -135,7 +45,7 @@ router.post('/', async (req, res) => {
        ${notes ? `<p><b>Notes:</b> ${notes}</p>` : ''}
        ${driverInstructions ? `<p><b>Driver instructions:</b> ${driverInstructions}</p>` : ''}`
     );
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { res.status(err.status || 500).json({ success: false, message: err.message }); }
 });
 
 // GET /api/orders - admin

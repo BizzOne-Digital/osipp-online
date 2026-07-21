@@ -18,6 +18,9 @@ export function CartProvider({ children }) {
   const [tip, setTip] = useState(0);
   const [driverInstructions, setDriverInstructions] = useState('');
   const [addOns, setAddOns] = useState([]); // [{ name, price, quantity }]
+  const [deliveryTiming, setDeliveryTiming] = useState('asap'); // 'asap' | 'scheduled'
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
 
   // Load delivery/add-on/tip config once
   useEffect(() => {
@@ -46,7 +49,7 @@ export function CartProvider({ children }) {
   const updateQty = useCallback((cartKey, delta) => {
     setItems(prev => prev.map(i => { if (i.cartKey !== cartKey) return i; const q = i.qty + delta; return q < 1 ? null : { ...i, qty: q }; }).filter(Boolean));
   }, []);
-  const clearCart = useCallback(() => { setItems([]); setCoupon(null); setCouponError(''); setTip(0); setDriverInstructions(''); setAddOns([]); }, []);
+  const clearCart = useCallback(() => { setItems([]); setCoupon(null); setCouponError(''); setTip(0); setDriverInstructions(''); setAddOns([]); setDeliveryTiming('asap'); setScheduledDate(''); setScheduledTime(''); }, []);
 
   // ── Add-ons ──
   const addAddOn = useCallback((addOn) => {
@@ -78,21 +81,39 @@ export function CartProvider({ children }) {
   const itemCount = items.reduce((sum, i) => sum + i.qty, 0);
   const discount = coupon ? coupon.discount : 0;
 
-  // Delivery fee by distinct store stops (mirror of the server calculation)
-  const feeMap = settings?.storeDeliveryFees || {};
-  const useStops = settings ? settings.useStopBasedDelivery : true;
-  const flatFee = settings?.deliveryFee != null ? settings.deliveryFee : 13;
+  // Delivery fee tier — mirror of the server calculation in backend/utils/orderBuilder.js.
+  // Server is authoritative; this is only a live estimate for the cart UI.
+  const DELIVERY_TIERS = { regular: 13, multiStop: 18, alcoholBeer: 22, largeHeavy: 28 };
+  const parseLiters = (label) => {
+    if (!label) return 0;
+    const m = String(label).toLowerCase().match(/([\d.]+)\s*(ml|l)\b/);
+    if (!m) return 0;
+    const val = parseFloat(m[1]);
+    return m[2] === 'l' ? val : val / 1000;
+  };
   const distinctStores = [...new Set(items.map(i => i.store).filter(Boolean))];
-  const deliveryStops = distinctStores.map(store => ({
-    store,
-    fee: feeMap[store] != null ? feeMap[store] : flatFee
-  }));
-  let deliveryFee = 0;
-  if (subtotal > 0) {
-    deliveryFee = useStops ? deliveryStops.reduce((s, d) => s + d.fee, 0) : flatFee;
+  let bottle750Count = 0, largeBottleCount = 0, beer24Count = 0, beer12Count = 0;
+  for (const i of items) {
+    const label = (i.variantLabel || i.volume || '').toLowerCase();
+    if (i.category === 'Beer') {
+      if (label.includes('24')) beer24Count += i.qty;
+      else if (label.includes('12')) beer12Count += i.qty;
+      continue;
+    }
+    const liters = parseLiters(label);
+    if (liters >= 1.14) largeBottleCount += i.qty; else bottle750Count += i.qty;
   }
+  let deliveryTier = 'regular';
+  if (largeBottleCount >= 5 || beer24Count >= 3 || beer12Count >= 8) deliveryTier = 'largeHeavy';
+  else if (distinctStores.length >= 3) deliveryTier = 'alcoholBeer';
+  else if (distinctStores.length >= 2 || bottle750Count >= 5 || beer24Count >= 1) deliveryTier = 'multiStop';
+  const deliveryFee = subtotal > 0 ? DELIVERY_TIERS[deliveryTier] : 0;
+  const deliveryStops = distinctStores.map(store => ({ store, fee: null }));
 
-  const total = Math.max(0, subtotal - discount + deliveryFee + (parseFloat(tip) || 0));
+  const hasTobacco = (settings?.addOns || []).some(s => s.isTobacco && addOns.find(a => a.name === s.name));
+  const cardFeePercent = settings?.cardProcessingFeePercent != null ? settings.cardProcessingFeePercent : 3.2;
+
+  const preFeeTotal = Math.max(0, subtotal - discount + deliveryFee + (parseFloat(tip) || 0));
 
   const activeAddOns = (settings?.addOns || []).filter(a => a.isActive);
   const tipEnabled = settings ? settings.tipEnabled : true;
@@ -102,10 +123,11 @@ export function CartProvider({ children }) {
     <CartContext.Provider value={{
       items, addItem, removeItem, updateQty, clearCart,
       cartOpen, openCart, closeCart,
-      subtotal, deliveryFee, deliveryStops, total, itemCount, discount,
+      subtotal, deliveryFee, deliveryTier, deliveryStops, preFeeTotal, cardFeePercent, hasTobacco, itemCount, discount,
       toast, coupon, couponLoading, couponError, applyCoupon, removeCoupon,
       tip, setTip, tipEnabled, tipPresets,
       driverInstructions, setDriverInstructions,
+      deliveryTiming, setDeliveryTiming, scheduledDate, setScheduledDate, scheduledTime, setScheduledTime,
       addOns, addAddOn, updateAddOnQty, activeAddOns, addOnsSubtotal,
       settings
     }}>

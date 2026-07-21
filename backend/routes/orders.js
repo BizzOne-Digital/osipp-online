@@ -8,10 +8,10 @@ const { buildOrderPayload, commitStock } = require('../utils/orderBuilder');
 // POST /api/orders - place order with optional coupon, add-ons, tip, stop-based delivery
 router.post('/', async (req, res) => {
   try {
-    const { customer, items, paymentMethod, notes, couponCode, addOns, tip, driverInstructions } = req.body;
+    const { customer, items, paymentMethod, notes, couponCode, addOns, tip, driverInstructions, deliveryTiming, scheduledDate, scheduledTime } = req.body;
 
-    const payload = await buildOrderPayload({ customer, items, addOns, tip, couponCode });
-    const { orderItems, orderAddOns, subtotal, discount, couponApplied, couponDoc, deliveryFee, deliveryStops, tipAmount, total, stockUpdates } = payload;
+    const payload = await buildOrderPayload({ customer, items, addOns, tip, couponCode, paymentMethod: paymentMethod || 'cash' });
+    const { orderItems, orderAddOns, subtotal, discount, couponApplied, couponDoc, deliveryFee, deliveryTier, deliveryStops, tipAmount, cardProcessingFee, total, stockUpdates } = payload;
 
     if (couponDoc) {
       couponDoc.usedCount += 1;
@@ -24,9 +24,11 @@ router.post('/', async (req, res) => {
 
     const order = await Order.create({
       customer, items: orderItems, addOns: orderAddOns, subtotal, discount, couponCode: couponApplied,
-      deliveryFee, deliveryStops, tip: tipAmount, total,
+      deliveryFee, deliveryTier, deliveryStops, tip: tipAmount, cardProcessingFee, total,
       paymentMethod: paymentMethod || 'cash', notes: notes || '',
       driverInstructions: driverInstructions || '',
+      deliveryTiming: deliveryTiming === 'scheduled' ? 'scheduled' : 'asap',
+      scheduledDate: scheduledDate || '', scheduledTime: scheduledTime || '',
       user: req.user ? req.user._id : null
     });
 
@@ -40,8 +42,9 @@ router.post('/', async (req, res) => {
        <p><b>Customer:</b> ${customer.name} — ${customer.phone}${customer.email ? ` — ${customer.email}` : ''}</p>
        <p><b>Address:</b> ${customer.address || ''}, ${customer.city || ''} ${customer.postalCode || ''}</p>
        <p><b>Payment:</b> ${paymentMethod || 'cash'}</p>
+       <p><b>Delivery timing:</b> ${deliveryTiming === 'scheduled' ? `Scheduled — ${scheduledDate || ''} ${scheduledTime || ''}` : 'ASAP'}</p>
        <ul>${itemsHtml}</ul>
-       <p><b>Subtotal:</b> $${subtotal.toFixed(2)} | <b>Delivery:</b> $${deliveryFee.toFixed(2)} | <b>Tip:</b> $${tipAmount.toFixed(2)} | <b>Total:</b> $${total.toFixed(2)}</p>
+       <p><b>Subtotal:</b> $${subtotal.toFixed(2)} | <b>Delivery (${deliveryTier}):</b> $${deliveryFee.toFixed(2)} | <b>Processing &amp; Handling:</b> $${cardProcessingFee.toFixed(2)} | <b>Tip:</b> $${tipAmount.toFixed(2)} | <b>Total:</b> $${total.toFixed(2)}</p>
        ${notes ? `<p><b>Notes:</b> ${notes}</p>` : ''}
        ${driverInstructions ? `<p><b>Driver instructions:</b> ${driverInstructions}</p>` : ''}`
     );

@@ -29,14 +29,20 @@ const settingsSchema = new mongoose.Schema({
     type: [{
       name: { type: String, required: true },
       price: { type: Number, required: true, min: 0 },
-      isActive: { type: Boolean, default: true }
+      isActive: { type: Boolean, default: true },
+      // Tobacco/smoke items can't be returned once purchased — these require advance
+      // (card/online) payment only; cash on delivery is blocked for these.
+      isTobacco: { type: Boolean, default: false }
     }],
     default: [
-      { name: 'Pack of Cigarettes', price: 20, isActive: true },
-      { name: 'Lighter', price: 3, isActive: true },
-      { name: 'Bag of Ice', price: 5, isActive: true }
+      { name: 'Pack of Cigarettes', price: 20, isActive: true, isTobacco: true },
+      { name: 'Lighter', price: 3, isActive: true, isTobacco: false },
+      { name: 'Bag of Ice', price: 5, isActive: true, isTobacco: false }
     ]
   },
+  // Card/tap processing surcharge — folded into "Processing & Handling" display,
+  // not shown as a separate line. Not charged on cash or e-transfer orders.
+  cardProcessingFeePercent: { type: Number, default: 3.2 },
   // Driver tip settings.
   tipEnabled: { type: Boolean, default: true },
   tipPresets: { type: [Number], default: [3, 5, 10] },

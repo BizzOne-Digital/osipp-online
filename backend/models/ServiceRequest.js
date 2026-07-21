@@ -19,9 +19,17 @@ const serviceRequestSchema = new mongoose.Schema({
     phone: { type: String, required: true },
     email: { type: String, default: '' },
     address: { type: String, default: '' },
+    unitBuzzer: { type: String, default: '' },
     city: { type: String, default: 'Mississauga' },
     postalCode: { type: String, default: '' }
   },
+
+  // Pickup/delivery request details
+  orderNumber: { type: String, default: '' },
+  storeName: { type: String, default: '' },
+  storeAddress: { type: String, default: '' },
+  deliveryTiming: { type: String, enum: ['asap', 'scheduled'], default: 'asap' },
+  preferredTime: { type: String, default: '' },
 
   items: { type: String, default: '' },        // grocery / shopping list
   giftDetails: { type: String, default: '' },  // gift request text

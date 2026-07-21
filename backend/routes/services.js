@@ -22,9 +22,12 @@ router.post('/', async (req, res) => {
        <p><b>Name:</b> ${customer.name}</p>
        <p><b>Phone:</b> ${customer.phone}</p>
        ${customer.email ? `<p><b>Email:</b> ${customer.email}</p>` : ''}
-       ${customer.address ? `<p><b>Address:</b> ${customer.address}, ${customer.city || ''} ${customer.postalCode || ''}</p>` : ''}
+       ${customer.address ? `<p><b>Address:</b> ${customer.address}${customer.unitBuzzer ? ` (Unit/Buzzer: ${customer.unitBuzzer})` : ''}, ${customer.city || ''} ${customer.postalCode || ''}</p>` : ''}
        ${req.body.groceryType ? `<p><b>Type:</b> ${req.body.groceryType}</p>` : ''}
        ${req.body.plan ? `<p><b>Plan:</b> ${req.body.plan}</p>` : ''}
+       ${req.body.orderNumber ? `<p><b>Order #:</b> ${req.body.orderNumber}</p>` : ''}
+       ${req.body.storeName ? `<p><b>Store:</b> ${req.body.storeName}${req.body.storeAddress ? `, ${req.body.storeAddress}` : ''}</p>` : ''}
+       ${req.body.deliveryTiming ? `<p><b>Delivery timing:</b> ${req.body.deliveryTiming === 'scheduled' ? `Scheduled — ${req.body.preferredDate || ''} ${req.body.preferredTime || ''}` : 'ASAP'}</p>` : ''}
        ${req.body.items ? `<p><b>List:</b> ${req.body.items}</p>` : ''}
        ${req.body.giftDetails ? `<p><b>Gift:</b> ${req.body.giftDetails}</p>` : ''}
        ${req.body.notes ? `<p><b>Notes:</b> ${req.body.notes}</p>` : ''}`

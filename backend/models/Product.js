@@ -5,6 +5,9 @@ const mongoose = require('mongoose');
 const variantSchema = new mongoose.Schema({
   label: { type: String, required: true, trim: true }, // e.g. "1750 mL Bottle"
   price: { type: Number, required: true, min: 0 },
+  // Pre-sale reference price. When higher than `price`, the difference shows as a
+  // "Save $X" badge on this size.
+  originalPrice: { type: Number, default: 0 },
   stock: { type: Number, default: 100, min: 0 },
   sku: { type: String, default: '' }
 }, { _id: false });
@@ -13,6 +16,9 @@ const productSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   description: { type: String, default: '' },
   price: { type: Number, required: true, min: 0 },
+  // Pre-sale reference price. When higher than `price`, the difference shows as a
+  // "Save $X" badge on the product card and detail page.
+  originalPrice: { type: Number, default: 0 },
   category: { type: String, required: true, enum: ['Beer', 'Spirits', 'Wine', 'Convenience', 'Ready To Drink'] },
   subCategory: { type: String, default: '' },
   store: { type: String, required: true, enum: ['Beer Store', 'Liquor Store', 'Convenience Store'] },

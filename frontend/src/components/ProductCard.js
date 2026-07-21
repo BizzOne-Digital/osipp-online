@@ -25,7 +25,14 @@ export default function ProductCard({ product }) {
   const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
   const inWish = isAuth && isInWishlist(product._id);
 
-  const minPrice = hasVariants ? Math.min(...product.variants.map(v => v.price)) : product.price;
+  // Default to the 750ml size when the product has multiple sizes (spirits especially).
+  const defaultVariantIdx = hasVariants
+    ? Math.max(0, product.variants.findIndex(v => /750/.test(v.label || '')))
+    : -1;
+  const displayVariant = hasVariants ? product.variants[defaultVariantIdx] : null;
+  const minPrice = hasVariants ? displayVariant.price : product.price;
+  const originalPrice = hasVariants ? (displayVariant.originalPrice || 0) : (product.originalPrice || 0);
+  const saveAmount = originalPrice > minPrice ? originalPrice - minPrice : 0;
   const outOfStock = hasVariants ? product.variants.every(v => v.stock <= 0) : product.stock <= 0;
   const tint = CAT_TINT[product.category] || 'var(--cream)';
 
@@ -41,6 +48,7 @@ export default function ProductCard({ product }) {
         </button>
       )}
       <div className="prod-img-wrap">
+        {saveAmount > 0 && <span className="prod-save-badge">Save ${saveAmount.toFixed(2)}</span>}
         {product.image && !imgError
           ? <img src={product.image} alt={product.name} onError={()=>setImgError(true)} loading="lazy"/>
           : <div style={{fontSize:11,color:'var(--gray)',alignSelf:'center',fontWeight:600}}>No image</div>}
@@ -49,7 +57,10 @@ export default function ProductCard({ product }) {
         <div className="prod-category">{product.category}</div>
         <div className="prod-topline">
           <div className="prod-name">{product.name}</div>
-          <div className="prod-price">{hasVariants && <span style={{fontSize:10,fontWeight:600,color:'var(--gray)',marginRight:2}}>from</span>}<sup>$</sup>{minPrice.toFixed(2)}</div>
+          <div className="prod-price">
+            {saveAmount > 0 && <span style={{ fontSize: 12, color: 'var(--gray)', textDecoration: 'line-through', marginRight: 5, fontWeight: 500 }}>${originalPrice.toFixed(2)}</span>}
+            <sup>$</sup>{minPrice.toFixed(2)}
+          </div>
         </div>
         <div className="prod-subline">
           <span>{hasVariants ? `${product.variants.length} sizes` : (product.volume || ' ')}</span>

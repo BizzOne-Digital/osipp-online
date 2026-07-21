@@ -15,7 +15,7 @@ export default function Products() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [modal, setModal] = useState(null);
-  const [form, setForm] = useState({ name: '', category: 'Spirits', subCategory: '', store: 'Liquor Store', volume: '', price: '', stock: '100', badge: '', description: '' });
+  const [form, setForm] = useState({ name: '', category: 'Spirits', subCategory: '', store: 'Liquor Store', volume: '', price: '', originalPrice: '', sku: '', stock: '100', badge: '', description: '' });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [saving, setSaving] = useState(false);
@@ -38,16 +38,16 @@ export default function Products() {
   useEffect(() => { const t = setTimeout(() => { setPage(1); fetchProducts(); }, 300); return () => clearTimeout(t); }, [search]);
 
   const openAdd = () => {
-    setForm({ name: '', category: 'Spirits', subCategory: '', store: 'Liquor Store', volume: '', price: '', stock: '100', badge: '', description: '', variants: [] });
+    setForm({ name: '', category: 'Spirits', subCategory: '', store: 'Liquor Store', volume: '', price: '', originalPrice: '', sku: '', stock: '100', badge: '', description: '', variants: [] });
     setImageFile(null); setImagePreview(''); setModal('add');
   };
 
   const openEdit = (p) => {
-    setForm({ ...p, price: String(p.price), stock: String(p.stock), variants: (p.variants || []).map(v => ({ label: v.label, price: String(v.price), stock: String(v.stock) })) });
+    setForm({ ...p, price: String(p.price), originalPrice: p.originalPrice ? String(p.originalPrice) : '', stock: String(p.stock), variants: (p.variants || []).map(v => ({ label: v.label, price: String(v.price), originalPrice: v.originalPrice ? String(v.originalPrice) : '', stock: String(v.stock), sku: v.sku || '' })) });
     setImageFile(null); setImagePreview(p.image || ''); setModal(p);
   };
 
-  const addVariant = () => setForm(p => ({ ...p, variants: [...(p.variants || []), { label: '', price: '', stock: '100' }] }));
+  const addVariant = () => setForm(p => ({ ...p, variants: [...(p.variants || []), { label: '', price: '', originalPrice: '', stock: '100', sku: '' }] }));
   const updVariant = (i, k, v) => setForm(p => ({ ...p, variants: p.variants.map((x, idx) => idx === i ? { ...x, [k]: v } : x) }));
   const removeVariant = (i) => setForm(p => ({ ...p, variants: p.variants.filter((_, idx) => idx !== i) }));
 
@@ -63,12 +63,13 @@ export default function Products() {
     setSaving(true);
     try {
       const formData = new FormData();
-      ['name','category','subCategory','store','volume','badge','description'].forEach(k => formData.append(k, form[k] || ''));
+      ['name','category','subCategory','store','volume','badge','description','sku'].forEach(k => formData.append(k, form[k] || ''));
       formData.set('price', parseFloat(form.price));
+      formData.set('originalPrice', parseFloat(form.originalPrice) || 0);
       formData.set('stock', parseInt(form.stock) || 100);
       const cleanVariants = (form.variants || [])
         .filter(v => v.label && v.price !== '')
-        .map(v => ({ label: v.label.trim(), price: parseFloat(v.price) || 0, stock: parseInt(v.stock) || 0 }));
+        .map(v => ({ label: v.label.trim(), price: parseFloat(v.price) || 0, originalPrice: parseFloat(v.originalPrice) || 0, stock: parseInt(v.stock) || 0, sku: v.sku || '' }));
       formData.set('variants', JSON.stringify(cleanVariants));
       if (imageFile) formData.append('image', imageFile);
 
@@ -110,16 +111,17 @@ export default function Products() {
         <>
           <div className="adm-table-wrap">
             <table className="adm-table">
-              <thead><tr><th style={{ width: 56 }}>Img</th><th>Name</th><th>Category</th><th>Sub</th><th>Vol</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
+              <thead><tr><th style={{ width: 56 }}>Img</th><th>Name</th><th>SKU</th><th>Category</th><th>Sub</th><th>Vol</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
               <tbody>
                 {products.map(p => (
                   <tr key={p._id}>
                     <td>{p.image ? <img src={p.image} alt="" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }} /> : <div style={{ width: 40, height: 40, borderRadius: 6, background: 'var(--cream)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--gray)' }}>—</div>}</td>
                     <td style={{ fontWeight: 600 }}>{p.name}</td>
+                    <td style={{ fontSize: 12, color: 'var(--gray)' }}>{p.sku || '—'}</td>
                     <td style={{ fontSize: 12 }}>{p.category}</td>
                     <td style={{ fontSize: 12, color: 'var(--gray)' }}>{p.subCategory}</td>
                     <td style={{ fontSize: 12 }}>{p.volume}</td>
-                    <td style={{ fontWeight: 700 }}>${(p.price || 0).toFixed(2)}</td>
+                    <td style={{ fontWeight: 700 }}>${(p.price || 0).toFixed(2)}{p.originalPrice > p.price && <div style={{ fontSize: 11, color: 'var(--red)', fontWeight: 700 }}>Save ${(p.originalPrice - p.price).toFixed(2)}</div>}</td>
                     <td><span style={{ color: p.stock < 10 ? 'var(--red)' : 'inherit', fontWeight: p.stock < 10 ? 700 : 400 }}>{p.stock}</span></td>
                     <td><div style={{ display: 'flex', gap: 6 }}>
                       <button className="adm-btn-action" onClick={() => openEdit(p)}>Edit</button>
@@ -127,7 +129,7 @@ export default function Products() {
                     </div></td>
                   </tr>
                 ))}
-                {products.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>No products</td></tr>}
+                {products.length === 0 && <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>No products</td></tr>}
               </tbody>
             </table>
           </div>
@@ -170,18 +172,25 @@ export default function Products() {
               </div>
               <div className="form-row">
                 <div className="form-group"><label className="form-label">Price ($) *</label><input className="form-input" type="number" step="0.01" value={form.price} onChange={e => upd('price', e.target.value)} /></div>
+                <div className="form-group"><label className="form-label">Original Price ($) — for Sale</label><input className="form-input" type="number" step="0.01" value={form.originalPrice} onChange={e => upd('originalPrice', e.target.value)} placeholder="Leave blank if not on sale" /></div>
+              </div>
+              <div className="form-row">
                 <div className="form-group"><label className="form-label">Stock</label><input className="form-input" type="number" value={form.stock} onChange={e => upd('stock', e.target.value)} /></div>
+                <div className="form-group"><label className="form-label">SKU</label><input className="form-input" value={form.sku} onChange={e => upd('sku', e.target.value)} placeholder="e.g. DAL-750" /></div>
               </div>
               <div className="form-group"><label className="form-label">Badge</label><select className="form-input" value={form.badge} onChange={e => upd('badge', e.target.value)}>{BADGES.map(b => <option key={b} value={b}>{b || '— None —'}</option>)}</select></div>
+              <div className="form-group"><label className="form-label">Description</label><textarea className="form-input" rows={3} value={form.description} onChange={e => upd('description', e.target.value)} placeholder="Tasting notes, origin, etc." style={{ resize: 'vertical' }} /></div>
 
               <div className="form-group" style={{ borderTop: '1px solid var(--gray-lt)', paddingTop: 16, marginTop: 8 }}>
                 <label className="form-label">Size Options (optional)</label>
                 <div style={{ fontSize: 11, color: 'var(--gray)', marginBottom: 10 }}>Add sizes with their own price (e.g. 1750 mL Bottle — $69.95). If none, the single price above is used. One image is shared for all sizes.</div>
                 {(form.variants || []).map((v, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                    <input className="form-input" style={{ flex: 2 }} value={v.label} onChange={e => updVariant(i, 'label', e.target.value)} placeholder="1750 mL Bottle" />
-                    <input className="form-input" style={{ flex: 1 }} type="number" step="0.01" value={v.price} onChange={e => updVariant(i, 'price', e.target.value)} placeholder="Price" />
-                    <input className="form-input" style={{ flex: 1 }} type="number" value={v.stock} onChange={e => updVariant(i, 'stock', e.target.value)} placeholder="Stock" />
+                  <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                    <input className="form-input" style={{ flex: 2, minWidth: 140 }} value={v.label} onChange={e => updVariant(i, 'label', e.target.value)} placeholder="750 mL Bottle" />
+                    <input className="form-input" style={{ flex: 1, minWidth: 80 }} type="number" step="0.01" value={v.price} onChange={e => updVariant(i, 'price', e.target.value)} placeholder="Price" />
+                    <input className="form-input" style={{ flex: 1, minWidth: 80 }} type="number" step="0.01" value={v.originalPrice} onChange={e => updVariant(i, 'originalPrice', e.target.value)} placeholder="Orig. Price" />
+                    <input className="form-input" style={{ flex: 1, minWidth: 70 }} type="number" value={v.stock} onChange={e => updVariant(i, 'stock', e.target.value)} placeholder="Stock" />
+                    <input className="form-input" style={{ flex: 1, minWidth: 90 }} value={v.sku} onChange={e => updVariant(i, 'sku', e.target.value)} placeholder="SKU" />
                     <button className="adm-btn-danger" onClick={() => removeVariant(i)}>✕</button>
                   </div>
                 ))}

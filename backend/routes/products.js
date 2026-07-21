@@ -110,7 +110,7 @@ const parseVariants = (data) => {
   if (Array.isArray(data.variants)) {
     data.variants = data.variants
       .filter(v => v && v.label && v.price !== '' && v.price != null)
-      .map(v => ({ label: String(v.label).trim(), price: parseFloat(v.price) || 0, stock: parseInt(v.stock) || 0, sku: v.sku || '' }));
+      .map(v => ({ label: String(v.label).trim(), price: parseFloat(v.price) || 0, originalPrice: parseFloat(v.originalPrice) || 0, stock: parseInt(v.stock) || 0, sku: v.sku || '' }));
   }
   return data;
 };

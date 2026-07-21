@@ -34,13 +34,20 @@ const orderSchema = new mongoose.Schema({
   discount: { type: Number, default: 0 },
   couponCode: { type: String, default: '' },
   deliveryFee: { type: Number, default: 0 },
-  // Breakdown of which stores were charged, e.g. [{ store: 'Liquor Store', fee: 13 }]
+  // Which tier the flat delivery fee was charged under, e.g. "Multi-Stop or Medium Order"
+  deliveryTier: { type: String, default: '' },
+  // Stores visited for this order (fee is now a flat tier fee, not per-stop)
   deliveryStops: {
     type: [{ store: String, fee: Number }],
     default: []
   },
   tip: { type: Number, default: 0, min: 0 },
+  // 3.2% card/tap processing surcharge, folded into the customer-facing "Processing & Handling" total
+  cardProcessingFee: { type: Number, default: 0 },
   driverInstructions: { type: String, default: '' },
+  deliveryTiming: { type: String, enum: ['asap', 'scheduled'], default: 'asap' },
+  scheduledDate: { type: String, default: '' },
+  scheduledTime: { type: String, default: '' },
   total: { type: Number, required: true },
   paymentMethod: { type: String, enum: ['card', 'cash', 'interac', 'stripe'], default: 'cash' },
   paymentStatus: { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },

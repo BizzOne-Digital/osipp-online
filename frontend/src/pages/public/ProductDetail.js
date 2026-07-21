@@ -30,6 +30,11 @@ export default function ProductDetail() {
       .then(r => {
         const p = r.data.data;
         setProduct(p);
+        // Default to the 750ml size when the product has multiple sizes (spirits especially).
+        if (Array.isArray(p.variants) && p.variants.length > 0) {
+          const idx750 = p.variants.findIndex(v => /750/.test(v.label || ''));
+          setVariantIdx(idx750 > -1 ? idx750 : 0);
+        }
         axios.get(`${API}/products?category=${encodeURIComponent(p.category)}&limit=5`)
           .then(rr => setRelated((rr.data.data || []).filter(x => x._id !== p._id).slice(0, 4)))
           .catch(() => {});
@@ -49,6 +54,8 @@ export default function ProductDetail() {
   const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
   const variant = hasVariants ? product.variants[variantIdx] : null;
   const price = variant ? variant.price : product.price;
+  const originalPrice = variant ? (variant.originalPrice || 0) : (product.originalPrice || 0);
+  const saveAmount = originalPrice > price ? originalPrice - price : 0;
   const stock = variant ? variant.stock : product.stock;
   const outOfStock = stock <= 0;
   const inWish = isAuth && isInWishlist(product._id);
@@ -79,6 +86,7 @@ export default function ProductDetail() {
           {/* Image */}
           <div className="pd-image">
             {product.badge && <span className={`prod-badge${product.badge === 'Sale' ? ' sale' : ''}`} style={{ top: 16, left: 16 }}>{product.badge}</span>}
+            {saveAmount > 0 && <span className="prod-save-badge" style={{ top: 16, right: 16, bottom: 'auto' }}>Save ${saveAmount.toFixed(2)}</span>}
             {product.image && !imgError
               ? <img src={product.image} alt={product.name} onError={() => setImgError(true)} style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', objectFit: 'contain', padding: 18 }} />
               : <BottleSVG cat={product.category} />}
@@ -91,6 +99,8 @@ export default function ProductDetail() {
 
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 20 }}>
               <div className="prod-price" style={{ fontSize: 30 }}><sup>$</sup>{price.toFixed(2)}</div>
+              {saveAmount > 0 && <span style={{ color: 'var(--gray)', fontSize: 18, textDecoration: 'line-through' }}>${originalPrice.toFixed(2)}</span>}
+              {saveAmount > 0 && <span style={{ color: 'white', background: 'var(--red)', fontSize: 12, fontWeight: 800, padding: '3px 10px', borderRadius: 99 }}>Save ${saveAmount.toFixed(2)}</span>}
               {!hasVariants && product.volume && <span style={{ color: 'var(--gray)', fontSize: 14 }}>· {product.volume}</span>}
             </div>
 
@@ -115,7 +125,10 @@ export default function ProductDetail() {
                           opacity: off ? 0.45 : 1, transition: 'all .15s'
                         }}>
                         <div style={{ fontWeight: 700, fontSize: 14 }}>{v.label}</div>
-                        <div style={{ fontSize: 14, color: 'var(--gold-dk)', fontWeight: 700, marginTop: 2 }}>${v.price.toFixed(2)}</div>
+                        <div style={{ fontSize: 14, color: 'var(--gold-dk)', fontWeight: 700, marginTop: 2 }}>
+                          ${v.price.toFixed(2)}
+                          {v.originalPrice > v.price && <span style={{ color: 'var(--gray)', fontWeight: 500, fontSize: 12, textDecoration: 'line-through', marginLeft: 6 }}>${v.originalPrice.toFixed(2)}</span>}
+                        </div>
                         {off && <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 2 }}>Out of stock</div>}
                       </button>
                     );

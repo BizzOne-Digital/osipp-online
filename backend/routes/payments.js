@@ -12,9 +12,9 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 router.post('/create-checkout-session', async (req, res) => {
   if (!stripe) return res.status(500).json({ success: false, message: 'Stripe is not configured on the server' });
   try {
-    const { customer, items, notes, couponCode, addOns, tip, driverInstructions } = req.body;
-    const payload = await buildOrderPayload({ customer, items, addOns, tip, couponCode });
-    const { orderItems, orderAddOns, subtotal, discount, couponApplied, couponDoc, deliveryFee, deliveryStops, tipAmount, total, stockUpdates } = payload;
+    const { customer, items, notes, couponCode, addOns, tip, driverInstructions, deliveryTiming, scheduledDate, scheduledTime } = req.body;
+    const payload = await buildOrderPayload({ customer, items, addOns, tip, couponCode, paymentMethod: 'stripe' });
+    const { orderItems, orderAddOns, subtotal, discount, couponApplied, couponDoc, deliveryFee, deliveryTier, deliveryStops, tipAmount, cardProcessingFee, total, stockUpdates } = payload;
 
     if (couponDoc) {
       couponDoc.usedCount += 1;
@@ -25,9 +25,11 @@ router.post('/create-checkout-session', async (req, res) => {
 
     const order = await Order.create({
       customer, items: orderItems, addOns: orderAddOns, subtotal, discount, couponCode: couponApplied,
-      deliveryFee, deliveryStops, tip: tipAmount, total,
+      deliveryFee, deliveryTier, deliveryStops, tip: tipAmount, cardProcessingFee, total,
       paymentMethod: 'stripe', paymentStatus: 'pending',
       notes: notes || '', driverInstructions: driverInstructions || '',
+      deliveryTiming: deliveryTiming === 'scheduled' ? 'scheduled' : 'asap',
+      scheduledDate: scheduledDate || '', scheduledTime: scheduledTime || '',
       user: req.user ? req.user._id : null
     });
 

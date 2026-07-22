@@ -48,7 +48,7 @@ router.post('/', async (req, res) => {
        ${notes ? `<p><b>Notes:</b> ${notes}</p>` : ''}
        ${driverInstructions ? `<p><b>Driver instructions:</b> ${driverInstructions}</p>` : ''}`
     );
-  } catch (err) { res.status(err.status || 500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error('[ORDERS] POST / failed:', err.message, err.stack); res.status(err.status || 500).json({ success: false, message: err.message }); }
 });
 
 // GET /api/orders - admin
@@ -61,7 +61,7 @@ router.get('/', protect, adminOnly, async (req, res) => {
     const orders = await Order.find(filter).sort(sort).skip(skip).limit(parseInt(limit));
     const total = await Order.countDocuments(filter);
     res.json({ success: true, data: orders, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error('[ORDERS] request failed:', err.message, err.stack); res.status(500).json({ success: false, message: err.message }); }
 });
 
 // GET /api/orders/track/:orderId
@@ -70,7 +70,7 @@ router.get('/track/:orderId', async (req, res) => {
     const order = await Order.findOne({ orderId: req.params.orderId.toUpperCase() });
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
     res.json({ success: true, data: order });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error('[ORDERS] request failed:', err.message, err.stack); res.status(500).json({ success: false, message: err.message }); }
 });
 
 // GET /api/orders/:id - admin
@@ -79,7 +79,7 @@ router.get('/:id', protect, adminOnly, async (req, res) => {
     const order = await Order.findById(req.params.id).populate('items.product');
     if (!order) return res.status(404).json({ success: false, message: 'Not found' });
     res.json({ success: true, data: order });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error('[ORDERS] request failed:', err.message, err.stack); res.status(500).json({ success: false, message: err.message }); }
 });
 
 // PUT /api/orders/:id/status
@@ -105,12 +105,12 @@ router.put('/:id/status', protect, adminOnly, async (req, res) => {
     }
     const order = await Order.findByIdAndUpdate(req.params.id, update, { new: true });
     res.json({ success: true, data: order });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error('[ORDERS] request failed:', err.message, err.stack); res.status(500).json({ success: false, message: err.message }); }
 });
 
 router.delete('/:id', protect, adminOnly, async (req, res) => {
   try { await Order.findByIdAndDelete(req.params.id); res.json({ success: true }); }
-  catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  catch (err) { console.error('[ORDERS] request failed:', err.message, err.stack); res.status(500).json({ success: false, message: err.message }); }
 });
 
 module.exports = router;

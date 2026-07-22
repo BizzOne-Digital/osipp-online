@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(node -e \"require\\('./models/Order.js'\\); require\\('./models/Settings.js'\\); require\\('./models/ServiceRequest.js'\\); require\\('./routes/orders.js'\\); require\\('./routes/payments.js'\\); require\\('./routes/services.js'\\); console.log\\('ALL OK'\\)\")",
-      "Bash(node -e \"require\\('./models/Product.js'\\); require\\('./routes/products.js'\\); console.log\\('BACKEND OK'\\)\")"
+      "Bash(node -e \"require\\('./models/Product.js'\\); require\\('./routes/products.js'\\); console.log\\('BACKEND OK'\\)\")",
+      "Bash(git check-ignore *)",
+      "Bash(node -e \"require\\('./server.js'\\); console.log\\('BACKEND OK'\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"require\\('./utils/mailer.js'\\); console.log\\('MAILER OK'\\)\")"
     ]
   }
 }

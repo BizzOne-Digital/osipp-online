@@ -22,8 +22,12 @@ function verifyMailer() {
   });
 }
 
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
 // Fire-and-forget send: never throws, never blocks the caller, always logs success/failure.
-async function sendMail(subject, html, to) {
+// Retries a couple of times on transient failures (e.g. Gmail briefly rate-limiting a burst
+// of test orders sent back-to-back) before giving up and logging clearly.
+async function sendMail(subject, html, to, attempt = 1) {
   if (!transporter) {
     console.warn(`[MAILER] Skipped "${subject}" — mailer not configured.`);
     return;
@@ -37,7 +41,12 @@ async function sendMail(subject, html, to) {
     });
     console.log(`[MAILER] Sent: "${subject}" -> ${to || adminEmail}`);
   } catch (err) {
-    console.error(`[MAILER] FAILED to send "${subject}":`, err.message);
+    console.error(`[MAILER] Attempt ${attempt} FAILED to send "${subject}":`, err.message);
+    if (attempt < 3) {
+      await sleep(attempt * 1500);
+      return sendMail(subject, html, to, attempt + 1);
+    }
+    console.error(`[MAILER] GAVE UP after ${attempt} attempts — "${subject}" was NOT delivered.`);
   }
 }
 

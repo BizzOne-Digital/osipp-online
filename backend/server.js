@@ -6,6 +6,11 @@ require('dotenv').config();
 
 const app = express();
 
+// Safety net — without these, an unhandled promise rejection or thrown error outside a
+// route's try/catch would crash silently (or crash the whole process) with nothing in the logs.
+process.on('unhandledRejection', (err) => console.error('[UNHANDLED REJECTION]', err));
+process.on('uncaughtException', (err) => console.error('[UNCAUGHT EXCEPTION]', err));
+
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 app.use(cors({
   origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
@@ -58,7 +63,7 @@ app.use('/api/services', require('./routes/services'));
 app.get('/api/health', (req, res) => res.json({ status: 'ok', db: isConnected }));
 
 app.use((err, req, res, next) => {
-  console.error(err.message);
+  console.error(`[SERVER] ${req.method} ${req.path} failed:`, err.message, err.stack);
   res.status(500).json({ success: false, message: err.message });
 });
 

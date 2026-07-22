@@ -76,6 +76,7 @@ router.post('/create-checkout-session', async (req, res) => {
 
     res.json({ success: true, url: session.url });
   } catch (err) {
+    console.error('[PAYMENTS] create-checkout-session failed:', err.message, err.stack);
     res.status(err.status || 500).json({ success: false, message: err.message });
   }
 });
@@ -92,24 +93,35 @@ router.post('/webhook', async (req, res) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  const session = event.data.object;
+  console.log(`[STRIPE] Webhook received: ${event.type}`);
 
-  if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
-    const order = await Order.findOne({ stripeSessionId: session.id });
-    if (order && order.paymentStatus !== 'paid') {
-      order.paymentStatus = 'paid';
-      order.stripePaymentIntentId = session.payment_intent || '';
-      await order.save();
-      sendMail(
-        `Payment Received — Order ${order.orderId}`,
-        `<h2>Stripe Payment Confirmed</h2><p><b>Order ID:</b> ${order.orderId}</p><p><b>Total:</b> $${order.total.toFixed(2)}</p>`
-      );
+  try {
+    const session = event.data.object;
+
+    if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
+      const order = await Order.findOne({ stripeSessionId: session.id });
+      if (!order) {
+        console.error(`[STRIPE] Webhook ${event.type}: no order found for session ${session.id}`);
+      } else if (order.paymentStatus !== 'paid') {
+        order.paymentStatus = 'paid';
+        order.stripePaymentIntentId = session.payment_intent || '';
+        await order.save();
+        console.log(`[STRIPE] Order ${order.orderId} marked paid`);
+        sendMail(
+          `Payment Received — Order ${order.orderId}`,
+          `<h2>Stripe Payment Confirmed</h2><p><b>Order ID:</b> ${order.orderId}</p><p><b>Total:</b> $${order.total.toFixed(2)}</p>`
+        );
+      }
+    } else if (event.type === 'checkout.session.async_payment_failed' || event.type === 'checkout.session.expired') {
+      await Order.findOneAndUpdate({ stripeSessionId: session.id }, { paymentStatus: 'failed' });
+      console.log(`[STRIPE] Session ${session.id} marked failed (${event.type})`);
     }
-  } else if (event.type === 'checkout.session.async_payment_failed' || event.type === 'checkout.session.expired') {
-    await Order.findOneAndUpdate({ stripeSessionId: session.id }, { paymentStatus: 'failed' });
-  }
 
-  res.json({ received: true });
+    res.json({ received: true });
+  } catch (err) {
+    console.error('[STRIPE] Webhook processing failed:', err.message, err.stack);
+    res.status(500).json({ received: false, error: err.message });
+  }
 });
 
 module.exports = router;

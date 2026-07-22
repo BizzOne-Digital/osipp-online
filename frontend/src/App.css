@@ -319,7 +319,12 @@ textarea.form-input{resize:vertical}
   .cart-drawer{width:100%}
   .modal{border-radius:var(--r-lg);max-height:100vh}
   .btn-wa span{display:none}
-  .payment-options{grid-template-columns:1fr}
+  .payment-options{gap:8px}
+  .pay-opt{padding:10px 8px}
+  .pay-opt-name{font-size:12px}
+  .order-summary-mini{position:sticky;top:0;z-index:5;padding:12px 16px;margin-bottom:14px}
+  .order-summary-mini-title{margin-bottom:6px}
+  .order-line{margin-bottom:3px}
 }
 
 /* ═══════════════════════════════════════════════

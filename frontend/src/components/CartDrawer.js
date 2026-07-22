@@ -149,7 +149,7 @@ export default function CartDrawer({ onClose }) {
           <div style={{display:'flex',gap:10,marginTop:8}}><button className="btn-outline" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep('cart')}>Back</button><button className="btn-checkout" style={{flex:2}} onClick={()=>setStep('payment')}>Payment <ArrowIcon/></button></div>
         </div>}
 
-        {step === 'payment' && <div style={{padding:24,flex:1,overflowY:'auto'}}>
+        {step === 'payment' && <div style={{padding:'16px 20px',flex:1,overflowY:'auto'}}>
           <div className="order-summary-mini">
             <div className="order-summary-mini-title">Summary</div>
             {items.map(i=><div key={i.cartKey} className="order-line"><span>{i.name}{i.variantLabel?` (${i.variantLabel})`:''} x{i.qty}</span><span>${(i.price*i.qty).toFixed(2)}</span></div>)}
@@ -162,8 +162,8 @@ export default function CartDrawer({ onClose }) {
           </div>
 
           {tipEnabled && (
-            <div style={{marginBottom:18}}>
-              <div className="form-label" style={{marginBottom:10}}>Tip for the driver</div>
+            <div style={{marginBottom:12}}>
+              <div className="form-label" style={{marginBottom:6}}>Tip for the driver</div>
               <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                 <button onClick={()=>pickTip(0)} style={tipBtn(!customTip && (parseFloat(tip)||0)===0)}>No tip</button>
                 {tipPresets.map(t=>(
@@ -174,26 +174,26 @@ export default function CartDrawer({ onClose }) {
             </div>
           )}
 
-          <div className="form-label" style={{marginBottom:10}}>Delivery Timing</div>
-          <div className="payment-options" style={{marginBottom:18}}>
+          <div className="form-label" style={{marginBottom:6}}>Delivery Timing</div>
+          <div className="payment-options" style={{marginBottom:12}}>
             <div className={`pay-opt${deliveryTiming==='asap'?' selected':''}`} onClick={()=>setDeliveryTiming('asap')}><div className="pay-opt-name">ASAP</div></div>
             <div className={`pay-opt${deliveryTiming==='scheduled'?' selected':''}`} onClick={()=>setDeliveryTiming('scheduled')}><div className="pay-opt-name">Schedule Delivery</div></div>
           </div>
           {deliveryTiming === 'scheduled' && (
-            <div className="form-row" style={{marginBottom:10}}>
+            <div className="form-row" style={{marginBottom:8}}>
               <div className="form-group"><label className="form-label">Date</label><input className="form-input" type="date" value={scheduledDate} onChange={e=>setScheduledDate(e.target.value)}/></div>
               <div className="form-group"><label className="form-label">Time</label><input className="form-input" type="time" value={scheduledTime} onChange={e=>setScheduledTime(e.target.value)}/></div>
             </div>
           )}
 
-          <div className="form-label" style={{marginBottom:10}}>Payment Method</div>
-          {hasTobacco && <p style={{fontSize:12,color:'var(--red, #b91c1c)',marginBottom:10}}>Your order includes a smoke/tobacco item — advance payment by card is required (no cash, no e-transfer), as it can't be returned once purchased.</p>}
+          <div className="form-label" style={{marginBottom:6}}>Payment Method</div>
+          {hasTobacco && <p style={{fontSize:12,color:'var(--red, #b91c1c)',marginBottom:8}}>Your order includes a smoke/tobacco item — advance payment by card is required (no cash, no e-transfer), as it can't be returned once purchased.</p>}
           <div className="payment-options">
             {(hasTobacco ? ['stripe','card'] : ['cash','stripe','card','interac']).map(m=>(<div key={m} className={`pay-opt${payMethod===m?' selected':''}`} onClick={()=>setPayMethod(m)}><div className="pay-opt-name">{m==='cash'?'Cash on Delivery':m==='stripe'?'Pay Online (Card)':m==='card'?'Card (Tap at Door)':'Interac e-Transfer'}</div></div>))}
           </div>
-          {(payMethod==='stripe' || payMethod==='card') && <p style={{fontSize:11,color:'var(--gray)',marginTop:8}}>A {cardFeePercent}% processing fee applies to card/tap payments (included in Processing &amp; Handling above). No fee on cash or e-transfer.</p>}
-          <div style={{display:'flex',gap:10,marginTop:8}}><button className="btn-outline" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep('details')}>Back</button><button className="btn-checkout" style={{flex:2}} onClick={placeOrder} disabled={loading}>{loading?(payMethod==='stripe'?'Redirecting...':'Placing...'): payMethod==='stripe'?`Pay $${total.toFixed(2)}`:`Place Order · $${total.toFixed(2)}`}</button></div>
-          <p style={{fontSize:12,color:'var(--gray)',textAlign:'center',marginTop:10}}>If your product is not here, please let us know by text or call.</p>
+          {(payMethod==='stripe' || payMethod==='card') && <p style={{fontSize:11,color:'var(--gray)',marginTop:6}}>A {cardFeePercent}% processing fee applies to card/tap payments (included in Processing &amp; Handling above). No fee on cash or e-transfer.</p>}
+          <div style={{display:'flex',gap:10,marginTop:12}}><button className="btn-outline" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep('details')}>Back</button><button className="btn-checkout" style={{flex:2}} onClick={placeOrder} disabled={loading}>{loading?(payMethod==='stripe'?'Redirecting...':'Placing...'): payMethod==='stripe'?`Pay $${total.toFixed(2)}`:`Place Order · $${total.toFixed(2)}`}</button></div>
+          <p style={{fontSize:11,color:'var(--gray)',textAlign:'center',marginTop:8}}>If your product is not here, please let us know by text or call.</p>
         </div>}
 
         {step === 'success' && <div className="success-screen" style={{flex:1,display:'flex',flexDirection:'column',justifyContent:'center'}}>

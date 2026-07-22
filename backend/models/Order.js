@@ -60,11 +60,20 @@ const orderSchema = new mongoose.Schema({
   cancelReason: { type: String, default: '' }
 }, { timestamps: true });
 
+// Generates the next ORD-#### id from the highest existing one (not a document count,
+// which collides once any order is deleted — e.g. test orders removed in admin).
+// Retries a few times to also cover two orders saving at the same instant.
 orderSchema.pre('save', async function(next) {
-  if (!this.orderId) {
-    const count = await mongoose.model('Order').countDocuments();
-    this.orderId = 'ORD-' + String(1000 + count + 1).padStart(4, '0');
+  if (this.orderId) return next();
+  const Order = mongoose.model('Order');
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const last = await Order.findOne({ orderId: /^ORD-\d+$/ }).sort({ orderId: -1 }).lean();
+    const lastNum = last ? parseInt(last.orderId.split('-')[1], 10) : 1000;
+    const candidate = 'ORD-' + String(lastNum + 1).padStart(4, '0');
+    const exists = await Order.findOne({ orderId: candidate }).lean();
+    if (!exists) { this.orderId = candidate; break; }
   }
+  if (!this.orderId) return next(new Error('Could not generate a unique order ID — please try again.'));
   next();
 });
 

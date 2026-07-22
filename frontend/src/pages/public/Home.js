@@ -270,7 +270,7 @@ export default function Home() {
             Ready to Order?
           </h2>
           <p style={{ color: 'var(--gray)', fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
-            Call or text <strong>905-462-2160</strong> or order online. $13 delivery (taxes included). Delivery in about 1 hour to Mississauga & GTA.
+            Call or text <strong>905-462-2160</strong> or order online. Delivery starts at $4.99 — processing and handling charges apply at checkout. Delivery in about 1 hour to Mississauga & GTA.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
             <Link to="/products" className="btn-primary" style={{ padding: '15px 32px', fontSize: 16 }}>Browse Products <ArrowIcon /></Link>

@@ -42,7 +42,7 @@ export default function About() {
             </div>
             <div className="about-cta-box">
               <div style={{ fontFamily: 'var(--font-d)', fontSize: 20, fontWeight: 800, color: 'white', marginBottom: 8 }}>Ready to Order?</div>
-              <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 13, marginBottom: 12, lineHeight: 1.6 }}>$13 delivery fee (taxes included). Delivery in about 1 hour to Mississauga & GTA.</p>
+              <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 13, marginBottom: 12, lineHeight: 1.6 }}>Delivery starts at $4.99 — processing and handling charges apply at checkout. Delivery in about 1 hour to Mississauga & GTA.</p>
               <p style={{ color: 'rgba(255,255,255,.4)', fontSize: 12, marginBottom: 24 }}>19+ Only. ID required. Drink responsibly.</p>
               <Link to="/products" className="btn-primary">Shop Now <ArrowIcon /></Link>
             </div>

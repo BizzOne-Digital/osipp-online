@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const settingsSchema = new mongoose.Schema({
   businessName: { type: String, default: "O'SIPP Delivery" },
   phone: { type: String, default: '905-462-2160' },
-  email: { type: String, default: 'osippdelivery741@gmail.com' },
+  email: { type: String, default: 'info741@osipp.ca' },
   whatsapp: { type: String, default: '+1 905 462 2160' },
   instagram: { type: String, default: 'https://www.instagram.com/osipp_delivery' },
   address: { type: String, default: 'Mississauga, ON' },

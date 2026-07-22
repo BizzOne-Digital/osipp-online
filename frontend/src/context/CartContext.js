@@ -83,7 +83,12 @@ export function CartProvider({ children }) {
 
   // Delivery fee tier — mirror of the server calculation in backend/utils/orderBuilder.js.
   // Server is authoritative; this is only a live estimate for the cart UI.
-  const DELIVERY_TIERS = { regular: 13, multiStop: 18, alcoholBeer: 22, largeHeavy: 28 };
+  const DELIVERY_TIERS = {
+    regular: { delivery: 4.99, handling: 7.99 },
+    multiStop: { delivery: 6.99, handling: 10.99 },
+    alcoholBeer: { delivery: 8.99, handling: 12.99 },
+    largeHeavy: { delivery: 11.99, handling: 15.99 }
+  };
   const parseLiters = (label) => {
     if (!label) return 0;
     const m = String(label).toLowerCase().match(/([\d.]+)\s*(ml|l)\b/);
@@ -107,23 +112,35 @@ export function CartProvider({ children }) {
   if (largeBottleCount >= 5 || beer24Count >= 3 || beer12Count >= 8) deliveryTier = 'largeHeavy';
   else if (distinctStores.length >= 3) deliveryTier = 'alcoholBeer';
   else if (distinctStores.length >= 2 || bottle750Count >= 5 || beer24Count >= 1) deliveryTier = 'multiStop';
-  const deliveryFee = subtotal > 0 ? DELIVERY_TIERS[deliveryTier] : 0;
+  const deliveryFee = subtotal > 0 ? DELIVERY_TIERS[deliveryTier].delivery : 0;
+  const baseHandlingFee = subtotal > 0 ? DELIVERY_TIERS[deliveryTier].handling : 0;
   const deliveryStops = distinctStores.map(store => ({ store, fee: null }));
 
   const hasTobacco = (settings?.addOns || []).some(s => s.isTobacco && addOns.find(a => a.name === s.name));
   const cardFeePercent = settings?.cardProcessingFeePercent != null ? settings.cardProcessingFeePercent : 3.2;
 
-  const preFeeTotal = Math.max(0, subtotal - discount + deliveryFee + (parseFloat(tip) || 0));
-
   const activeAddOns = (settings?.addOns || []).filter(a => a.isActive);
   const tipEnabled = settings ? settings.tipEnabled : true;
   const tipPresets = settings?.tipPresets || [3, 5, 10];
+
+  // Card/tap payments fold a 3.2% surcharge directly into the Processing & Handling
+  // number (not a separate line) — cash/e-transfer pay the base handling fee only.
+  const getTotals = useCallback((paymentMethod) => {
+    const isCardTap = paymentMethod === 'card' || paymentMethod === 'stripe';
+    let handlingFee = baseHandlingFee;
+    if (isCardTap) {
+      const preFee = Math.max(0, subtotal - discount + deliveryFee + handlingFee + (parseFloat(tip) || 0));
+      handlingFee = Math.round((handlingFee + preFee * cardFeePercent / 100) * 100) / 100;
+    }
+    const total = Math.max(0, subtotal - discount + deliveryFee + handlingFee + (parseFloat(tip) || 0));
+    return { handlingFee, total };
+  }, [subtotal, discount, deliveryFee, baseHandlingFee, tip, cardFeePercent]);
 
   return (
     <CartContext.Provider value={{
       items, addItem, removeItem, updateQty, clearCart,
       cartOpen, openCart, closeCart,
-      subtotal, deliveryFee, deliveryTier, deliveryStops, preFeeTotal, cardFeePercent, hasTobacco, itemCount, discount,
+      subtotal, deliveryFee, deliveryTier, deliveryStops, getTotals, cardFeePercent, hasTobacco, itemCount, discount,
       toast, coupon, couponLoading, couponError, applyCoupon, removeCoupon,
       tip, setTip, tipEnabled, tipPresets,
       driverInstructions, setDriverInstructions,

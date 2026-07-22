@@ -31,7 +31,7 @@ export default function Footer() {
           <div>
             <div className="footer-col-title">Contact</div>
             <div className="footer-link">905-462-2160</div>
-            <div className="footer-link">osippdelivery741@gmail.com</div>
+            <div className="footer-link">info741@osipp.ca</div>
             <div className="footer-link">Mississauga & GTA, ON</div>
             <button className="btn-wa" style={{ fontSize: 12, padding: '8px 14px', marginTop: 16 }}
               onClick={() => window.open('https://wa.me/19054622160', '_blank')}>

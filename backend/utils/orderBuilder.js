@@ -9,11 +9,13 @@ const r2 = (n) => Math.round(n * 100) / 100;
 // Multi-Stop/Medium: 2 stores; or 5+ 750 mL bottles / one 24-pack of beer.
 // Alcohol+Convenience+Beer: 3-store orders with alcohol + convenience + two 24-packs of beer.
 // Large/Heavy: 5+ bottles 1.14L+; or 3+ 24-packs of beer; or 8+ 12-packs of beer.
+// Each tier splits into a "Delivery" component and a "Processing & Handling" component,
+// shown to the customer as two separate lines (not one flat fee).
 const DELIVERY_TIERS = {
-  regular: { label: 'Regular Delivery', fee: 13 },
-  multiStop: { label: 'Multi-Stop or Medium Order', fee: 18 },
-  alcoholBeer: { label: 'Alcohol, Convenience and Beer-Store Order', fee: 22 },
-  largeHeavy: { label: 'Large or Heavy Order', fee: 28 }
+  regular: { label: 'Regular Delivery', delivery: 4.99, handling: 7.99 },
+  multiStop: { label: 'Multi-Stop or Medium Order', delivery: 6.99, handling: 10.99 },
+  alcoholBeer: { label: 'Alcohol, Convenience and Beer-Store Order', delivery: 8.99, handling: 12.99 },
+  largeHeavy: { label: 'Large or Heavy Order', delivery: 11.99, handling: 15.99 }
 };
 
 // Parses a free-text volume/variant label (e.g. "1.75 L Bottle", "24 Pack", "750 mL")
@@ -124,10 +126,12 @@ async function buildOrderPayload({ customer, items, addOns, tip, couponCode, pay
   }
 
   let deliveryFee = 0;
+  let handlingFee = 0;
   let deliveryTier = null;
   if (subtotal > 0) {
     deliveryTier = classifyDeliveryTier(orderItems, stores.size);
-    deliveryFee = DELIVERY_TIERS[deliveryTier].fee;
+    deliveryFee = DELIVERY_TIERS[deliveryTier].delivery;
+    handlingFee = DELIVERY_TIERS[deliveryTier].handling;
   }
   deliveryFee = r2(deliveryFee);
   const deliveryStops = [...stores].map(store => ({ store, fee: null }));
@@ -135,18 +139,18 @@ async function buildOrderPayload({ customer, items, addOns, tip, couponCode, pay
   let tipAmount = Math.max(0, parseFloat(tip) || 0);
   tipAmount = r2(tipAmount);
 
-  const preFeeTotal = r2(Math.max(0, subtotal - discount + deliveryFee + tipAmount));
-
-  // 3.2% processing surcharge on card/online payments only — folded into the
-  // "Processing & Handling" total shown to the customer, not a separate line.
-  let cardProcessingFee = 0;
+  // 3.2% processing surcharge on card/online/tap payments only — folded directly into
+  // the "Processing & Handling" number shown to the customer (no separate line).
+  // No fee on cash or e-transfer.
   if (paymentMethod && ['card', 'stripe'].includes(paymentMethod)) {
-    cardProcessingFee = r2(preFeeTotal * (settings.cardProcessingFeePercent || 0) / 100);
+    const preFeeSubtotal = r2(Math.max(0, subtotal - discount + deliveryFee + handlingFee + tipAmount));
+    const cardFee = r2(preFeeSubtotal * (settings.cardProcessingFeePercent || 0) / 100);
+    handlingFee = r2(handlingFee + cardFee);
   }
 
-  const total = r2(preFeeTotal + cardProcessingFee);
+  const total = r2(Math.max(0, subtotal - discount + deliveryFee + handlingFee + tipAmount));
 
-  return { orderItems, orderAddOns, subtotal, discount, couponApplied, couponDoc, deliveryStops, deliveryFee, deliveryTier: deliveryTier ? DELIVERY_TIERS[deliveryTier].label : '', tipAmount, cardProcessingFee, total, stockUpdates };
+  return { orderItems, orderAddOns, subtotal, discount, couponApplied, couponDoc, deliveryStops, deliveryFee, handlingFee, deliveryTier: deliveryTier ? DELIVERY_TIERS[deliveryTier].label : '', tipAmount, total, stockUpdates };
 }
 
 async function commitStock(stockUpdates) {

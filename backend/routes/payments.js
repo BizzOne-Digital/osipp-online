@@ -14,7 +14,7 @@ router.post('/create-checkout-session', async (req, res) => {
   try {
     const { customer, items, notes, couponCode, addOns, tip, driverInstructions, deliveryTiming, scheduledDate, scheduledTime } = req.body;
     const payload = await buildOrderPayload({ customer, items, addOns, tip, couponCode, paymentMethod: 'stripe' });
-    const { orderItems, orderAddOns, subtotal, discount, couponApplied, couponDoc, deliveryFee, deliveryTier, deliveryStops, tipAmount, cardProcessingFee, total, stockUpdates } = payload;
+    const { orderItems, orderAddOns, subtotal, discount, couponApplied, couponDoc, deliveryFee, deliveryTier, deliveryStops, tipAmount, handlingFee, total, stockUpdates } = payload;
 
     if (couponDoc) {
       couponDoc.usedCount += 1;
@@ -25,13 +25,30 @@ router.post('/create-checkout-session', async (req, res) => {
 
     const order = await Order.create({
       customer, items: orderItems, addOns: orderAddOns, subtotal, discount, couponCode: couponApplied,
-      deliveryFee, deliveryTier, deliveryStops, tip: tipAmount, cardProcessingFee, total,
+      deliveryFee, deliveryTier, deliveryStops, tip: tipAmount, handlingFee, total,
       paymentMethod: 'stripe', paymentStatus: 'pending',
       notes: notes || '', driverInstructions: driverInstructions || '',
       deliveryTiming: deliveryTiming === 'scheduled' ? 'scheduled' : 'asap',
       scheduledDate: scheduledDate || '', scheduledTime: scheduledTime || '',
       user: req.user ? req.user._id : null
     });
+
+    // Notify the team as soon as the order is placed — don't rely solely on the Stripe
+    // webhook (which can silently fail to arrive if it isn't registered/reachable).
+    // The webhook below sends a second "Payment Confirmed" email once payment clears.
+    const itemsHtml = orderItems.map(i => `<li>${i.quantity} x ${i.name}${i.variantLabel ? ` (${i.variantLabel})` : ''} — $${(i.price * i.quantity).toFixed(2)}</li>`).join('');
+    sendMail(
+      `New Order ${order.orderId} — $${total.toFixed(2)} (Stripe — awaiting payment)`,
+      `<h2>New Order Received (Stripe Checkout)</h2>
+       <p><b>Order ID:</b> ${order.orderId}</p>
+       <p><b>Customer:</b> ${customer.name} — ${customer.phone}${customer.email ? ` — ${customer.email}` : ''}</p>
+       <p><b>Address:</b> ${customer.address || ''}, ${customer.city || ''} ${customer.postalCode || ''}</p>
+       <ul>${itemsHtml}</ul>
+       <p><b>Subtotal:</b> $${subtotal.toFixed(2)} | <b>Delivery (${deliveryTier}):</b> $${deliveryFee.toFixed(2)} | <b>Processing &amp; Handling:</b> $${handlingFee.toFixed(2)} | <b>Tip:</b> $${tipAmount.toFixed(2)} | <b>Total:</b> $${total.toFixed(2)}</p>
+       ${notes ? `<p><b>Notes:</b> ${notes}</p>` : ''}
+       ${driverInstructions ? `<p><b>Driver instructions:</b> ${driverInstructions}</p>` : ''}
+       <p><i>Payment confirmation will follow once the customer completes Stripe Checkout.</i></p>`
+    );
 
     // Single line item for the full total — avoids per-item rounding/negative-discount issues with Stripe.
     const session = await stripe.checkout.sessions.create({

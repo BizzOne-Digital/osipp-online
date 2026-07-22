@@ -1,8 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { CartIcon, WhatsAppIcon, MenuIcon, CloseIcon } from './Icons';
+import { CartIcon, WhatsAppIcon, MenuIcon, CloseIcon, SearchIcon } from './Icons';
 
 const UserIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
 
@@ -10,10 +10,20 @@ export default function Navbar({ onCartOpen }) {
   const { itemCount } = useCart();
   const { isAuth, user, logout, isAdmin } = useAuth();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenu, setUserMenu] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const links = [{ to:'/',label:'Home' },{ to:'/products',label:'Alcohol' },{ to:'/grocery',label:'Grocery' },{ to:'/products?cat=Convenience',label:'Convenience' },{ to:'/gifts',label:'Gifts' },{ to:'/tracking',label:'Track Order' }];
+
+  const runSearch = (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    setSearchOpen(false); setMobileOpen(false);
+  };
 
   return (
     <nav className="nav">
@@ -24,6 +34,15 @@ export default function Navbar({ onCartOpen }) {
         </Link>
         <div className="nav-links">{links.map(l=><Link key={l.to} to={l.to} className={`nav-link${pathname===l.to?' active':''}`}>{l.label}</Link>)}</div>
         <div className="nav-actions">
+          <div style={{position:'relative'}}>
+            <button className="btn-icon" onClick={()=>setSearchOpen(!searchOpen)}><SearchIcon/></button>
+            {searchOpen && (
+              <form onSubmit={runSearch} style={{position:'absolute',right:0,top:'110%',background:'white',border:'1.5px solid var(--gray-lt)',borderRadius:10,padding:8,zIndex:50,boxShadow:'0 8px 24px rgba(0,0,0,.12)',display:'flex',gap:6,animation:'fadeUp .15s ease'}}>
+                <input autoFocus value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search products..." style={{width:200,padding:'8px 10px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:13,outline:'none'}}/>
+                <button type="submit" style={{padding:'8px 14px',background:'var(--black)',color:'white',border:'none',borderRadius:6,fontSize:12,fontWeight:600,cursor:'pointer'}}>Go</button>
+              </form>
+            )}
+          </div>
           <button className="btn-icon" onClick={onCartOpen}><CartIcon/>{itemCount>0 && <span className="cart-badge">{itemCount}</span>}</button>
           <button className="btn-wa" onClick={()=>window.open('https://wa.me/19054622160','_blank')}><WhatsAppIcon/><span>WhatsApp</span></button>
 
@@ -49,6 +68,10 @@ export default function Navbar({ onCartOpen }) {
       </div>
       {mobileOpen && (
         <div style={{position:'absolute',top:68,left:0,right:0,background:'white',borderBottom:'1.5px solid var(--gray-lt)',padding:'12px 24px',zIndex:99,animation:'fadeUp .2s ease'}}>
+          <form onSubmit={runSearch} style={{display:'flex',gap:6,padding:'8px 0 16px'}}>
+            <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search products..." style={{flex:1,padding:'10px 12px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:13,outline:'none'}}/>
+            <button type="submit" style={{padding:'10px 16px',background:'var(--black)',color:'white',border:'none',borderRadius:6,fontSize:12,fontWeight:600,cursor:'pointer'}}>Go</button>
+          </form>
           {links.map(l=><Link key={l.to} to={l.to} className={`nav-link${pathname===l.to?' active':''}`} style={{display:'block',padding:'12px 0'}} onClick={()=>setMobileOpen(false)}>{l.label}</Link>)}
           {isAuth ? <>
             <Link to="/account" style={{display:'block',padding:'12px 0'}} className="nav-link" onClick={()=>setMobileOpen(false)}>My Account</Link>

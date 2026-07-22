@@ -8,7 +8,7 @@ const API = process.env.REACT_APP_API_URL || '/api';
 
 export default function CartDrawer({ onClose }) {
   const {
-    items, updateQty, removeItem, subtotal, deliveryFee, deliveryTier, deliveryStops, preFeeTotal, cardFeePercent, hasTobacco, clearCart,
+    items, updateQty, removeItem, subtotal, deliveryFee, deliveryTier, deliveryStops, getTotals, cardFeePercent, hasTobacco, clearCart,
     discount, coupon, couponError, couponLoading, applyCoupon, removeCoupon,
     tip, setTip, tipEnabled, tipPresets,
     driverInstructions, setDriverInstructions,
@@ -20,8 +20,7 @@ export default function CartDrawer({ onClose }) {
   const [form, setForm] = useState({ name: user?.name||'', phone: user?.phone||'', email: user?.email||'', address: user?.address||'', city: user?.city||'Mississauga', postalCode: user?.postalCode||'' });
   // Tobacco/smoke orders can't be paid cash on delivery — default them straight to card.
   const [payMethod, setPayMethod] = useState(hasTobacco ? 'stripe' : 'cash');
-  const cardProcessingFee = payMethod === 'stripe' ? Math.round(preFeeTotal * cardFeePercent / 100 * 100) / 100 : 0;
-  const total = Math.round((preFeeTotal + cardProcessingFee) * 100) / 100;
+  const { handlingFee, total } = getTotals(payMethod);
   const [orderId, setOrderId] = useState('');
   const [loading, setLoading] = useState(false);
   const [couponInput, setCouponInput] = useState('');
@@ -31,9 +30,9 @@ export default function CartDrawer({ onClose }) {
 
   const placeOrder = async () => {
     if (!form.name || !form.phone || !form.address) return alert('Fill required fields');
-    setLoading(true);
-    if (hasTobacco && payMethod !== 'stripe') return alert('Smoke/tobacco orders require advance payment by card — cash and e-transfer are not accepted for these orders.');
+    if (hasTobacco && !['stripe','card'].includes(payMethod)) return alert('Smoke/tobacco orders require advance payment by card — cash and e-transfer are not accepted for these orders.');
     if (deliveryTiming === 'scheduled' && (!scheduledDate || !scheduledTime)) return alert('Please choose a delivery date and time');
+    setLoading(true);
     const orderBody = {
       customer: form,
       items: items.map(i => ({ product: i._id, quantity: i.qty, variantIndex: i.variantIndex })),
@@ -132,8 +131,8 @@ export default function CartDrawer({ onClose }) {
             <div className="cart-subtotal"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
             {discount > 0 && <div className="cart-subtotal"><span>Discount</span><span style={{color:'var(--green)'}}>-${discount.toFixed(2)}</span></div>}
             <div className="cart-subtotal"><span>Delivery{deliveryStops.length ? ` · ${deliveryStops.map(d=>d.store).join(', ')}` : ''}</span><span>${deliveryFee.toFixed(2)}</span></div>
-            <div className="cart-total"><span className="cart-total-lbl">Total</span><span className="cart-total-val">${(preFeeTotal).toFixed(2)}</span></div>
-            <div style={{fontSize:11,color:'var(--gray)',textAlign:'right',marginTop:2}}>Card/tap payments add a {cardFeePercent}% processing fee at checkout · All prices are in-store</div>
+            <div className="cart-subtotal"><span>Processing &amp; Handling</span><span>${handlingFee.toFixed(2)}</span></div>
+            <div className="cart-total"><span className="cart-total-lbl">Total</span><span className="cart-total-val">${total.toFixed(2)}</span></div>
             <button className="btn-checkout" onClick={()=>setStep('details')}>Checkout <ArrowIcon/></button>
           </div>}
         </>}
@@ -156,11 +155,9 @@ export default function CartDrawer({ onClose }) {
             {items.map(i=><div key={i.cartKey} className="order-line"><span>{i.name}{i.variantLabel?` (${i.variantLabel})`:''} x{i.qty}</span><span>${(i.price*i.qty).toFixed(2)}</span></div>)}
             {addOns.map(a=><div key={a.name} className="order-line"><span>{a.name} x{a.quantity}</span><span>${(a.price*a.quantity).toFixed(2)}</span></div>)}
             {discount>0 && <div className="order-line" style={{color:'var(--green)'}}><span>Coupon ({coupon?.code})</span><span>-${discount.toFixed(2)}</span></div>}
-            {deliveryStops.length > 1
-              ? deliveryStops.map(d => <div key={d.store} className="order-line"><span>Delivery · {d.store}</span><span>${d.fee.toFixed(2)}</span></div>)
-              : <div className="order-line"><span>Delivery</span><span>${deliveryFee.toFixed(2)}</span></div>}
+            <div className="order-line"><span>Delivery{deliveryStops.length ? ` · ${deliveryStops.map(d=>d.store).join(', ')}` : ''}</span><span>${deliveryFee.toFixed(2)}</span></div>
+            <div className="order-line"><span>Processing &amp; Handling</span><span>${handlingFee.toFixed(2)}</span></div>
             {(parseFloat(tip)||0) > 0 && <div className="order-line"><span>Driver tip</span><span>${(parseFloat(tip)||0).toFixed(2)}</span></div>}
-            {cardProcessingFee > 0 && <div className="order-line"><span>Processing &amp; handling ({cardFeePercent}%)</span><span>${cardProcessingFee.toFixed(2)}</span></div>}
             <div className="order-line-bold"><span>Total</span><span style={{color:'var(--gold-dk)'}}>${total.toFixed(2)}</span></div>
           </div>
 
@@ -192,9 +189,9 @@ export default function CartDrawer({ onClose }) {
           <div className="form-label" style={{marginBottom:10}}>Payment Method</div>
           {hasTobacco && <p style={{fontSize:12,color:'var(--red, #b91c1c)',marginBottom:10}}>Your order includes a smoke/tobacco item — advance payment by card is required (no cash, no e-transfer), as it can't be returned once purchased.</p>}
           <div className="payment-options">
-            {(hasTobacco ? ['stripe'] : ['cash','stripe','interac']).map(m=>(<div key={m} className={`pay-opt${payMethod===m?' selected':''}`} onClick={()=>setPayMethod(m)}><div className="pay-opt-name">{m==='cash'?'Cash on Delivery':m==='stripe'?'Pay Online (Card)':'Interac e-Transfer'}</div></div>))}
+            {(hasTobacco ? ['stripe','card'] : ['cash','stripe','card','interac']).map(m=>(<div key={m} className={`pay-opt${payMethod===m?' selected':''}`} onClick={()=>setPayMethod(m)}><div className="pay-opt-name">{m==='cash'?'Cash on Delivery':m==='stripe'?'Pay Online (Card)':m==='card'?'Card (Tap at Door)':'Interac e-Transfer'}</div></div>))}
           </div>
-          {payMethod==='stripe' && <p style={{fontSize:11,color:'var(--gray)',marginTop:8}}>A {cardFeePercent}% processing fee applies to card/tap payments (included in Processing &amp; Handling above). No fee on cash or e-transfer.</p>}
+          {(payMethod==='stripe' || payMethod==='card') && <p style={{fontSize:11,color:'var(--gray)',marginTop:8}}>A {cardFeePercent}% processing fee applies to card/tap payments (included in Processing &amp; Handling above). No fee on cash or e-transfer.</p>}
           <div style={{display:'flex',gap:10,marginTop:8}}><button className="btn-outline" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep('details')}>Back</button><button className="btn-checkout" style={{flex:2}} onClick={placeOrder} disabled={loading}>{loading?(payMethod==='stripe'?'Redirecting...':'Placing...'): payMethod==='stripe'?`Pay $${total.toFixed(2)}`:`Place Order · $${total.toFixed(2)}`}</button></div>
           <p style={{fontSize:12,color:'var(--gray)',textAlign:'center',marginTop:10}}>If your product is not here, please let us know by text or call.</p>
         </div>}

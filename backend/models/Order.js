@@ -42,8 +42,8 @@ const orderSchema = new mongoose.Schema({
     default: []
   },
   tip: { type: Number, default: 0, min: 0 },
-  // 3.2% card/tap processing surcharge, folded into the customer-facing "Processing & Handling" total
-  cardProcessingFee: { type: Number, default: 0 },
+  // Processing & Handling — includes the 3.2% card/tap surcharge when paid by card/stripe
+  handlingFee: { type: Number, default: 0 },
   driverInstructions: { type: String, default: '' },
   deliveryTiming: { type: String, enum: ['asap', 'scheduled'], default: 'asap' },
   scheduledDate: { type: String, default: '' },

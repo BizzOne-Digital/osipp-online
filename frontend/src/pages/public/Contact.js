@@ -29,7 +29,7 @@ export default function Contact() {
             </div>
             <div className="contact-info-item">
               <div className="contact-icon gold"><MailIcon /></div>
-              <div><div className="contact-info-label">Email</div><div className="contact-info-val">osippdelivery741@gmail.com</div></div>
+              <div><div className="contact-info-label">Email</div><div className="contact-info-val">info741@osipp.ca</div></div>
             </div>
             <div className="hours-box">
               <div className="hours-title">Delivery Hours</div>

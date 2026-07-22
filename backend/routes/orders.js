@@ -32,10 +32,11 @@ router.post('/', async (req, res) => {
       user: req.user ? req.user._id : null
     });
 
-    res.status(201).json({ success: true, data: order });
-
+    // Awaited BEFORE responding — on Vercel/serverless, the function can be frozen the
+    // instant the response is sent, which was killing the mailer's retry logic mid-flight
+    // and silently dropping some notification emails.
     const itemsHtml = orderItems.map(i => `<li>${i.quantity} x ${i.name}${i.variantLabel ? ` (${i.variantLabel})` : ''} — $${(i.price * i.quantity).toFixed(2)}</li>`).join('');
-    sendMail(
+    await sendMail(
       `New Order ${order.orderId} — $${total.toFixed(2)}`,
       `<h2>New Order Received</h2>
        <p><b>Order ID:</b> ${order.orderId}</p>
@@ -48,6 +49,8 @@ router.post('/', async (req, res) => {
        ${notes ? `<p><b>Notes:</b> ${notes}</p>` : ''}
        ${driverInstructions ? `<p><b>Driver instructions:</b> ${driverInstructions}</p>` : ''}`
     );
+
+    res.status(201).json({ success: true, data: order });
   } catch (err) { console.error('[ORDERS] POST / failed:', err.message, err.stack); res.status(err.status || 500).json({ success: false, message: err.message }); }
 });
 

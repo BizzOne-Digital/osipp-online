@@ -37,7 +37,7 @@ router.post('/create-checkout-session', async (req, res) => {
     // webhook (which can silently fail to arrive if it isn't registered/reachable).
     // The webhook below sends a second "Payment Confirmed" email once payment clears.
     const itemsHtml = orderItems.map(i => `<li>${i.quantity} x ${i.name}${i.variantLabel ? ` (${i.variantLabel})` : ''} — $${(i.price * i.quantity).toFixed(2)}</li>`).join('');
-    sendMail(
+    await sendMail(
       `New Order ${order.orderId} — $${total.toFixed(2)} (Stripe — awaiting payment)`,
       `<h2>New Order Received (Stripe Checkout)</h2>
        <p><b>Order ID:</b> ${order.orderId}</p>
@@ -107,7 +107,7 @@ router.post('/webhook', async (req, res) => {
         order.stripePaymentIntentId = session.payment_intent || '';
         await order.save();
         console.log(`[STRIPE] Order ${order.orderId} marked paid`);
-        sendMail(
+        await sendMail(
           `Payment Received — Order ${order.orderId}`,
           `<h2>Stripe Payment Confirmed</h2><p><b>Order ID:</b> ${order.orderId}</p><p><b>Total:</b> $${order.total.toFixed(2)}</p>`
         );

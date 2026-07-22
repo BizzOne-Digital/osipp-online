@@ -13,9 +13,10 @@ router.post('/', async (req, res) => {
     const data = { ...req.body };
     if (req.user) data.user = req.user._id;
     const request = await ServiceRequest.create(data);
-    res.status(201).json({ success: true, data: request });
 
-    sendMail(
+    // Awaited BEFORE responding — on serverless (Vercel), the function can be frozen the
+    // instant the response is sent, silently dropping a fire-and-forget email mid-flight.
+    await sendMail(
       `New ${kind} Request — ${customer.name}`,
       `<h2>New ${kind} Request</h2>
        <p><b>Request ID:</b> ${request.requestId || request._id}</p>
@@ -32,7 +33,9 @@ router.post('/', async (req, res) => {
        ${req.body.giftDetails ? `<p><b>Gift:</b> ${req.body.giftDetails}</p>` : ''}
        ${req.body.notes ? `<p><b>Notes:</b> ${req.body.notes}</p>` : ''}`
     );
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+
+    res.status(201).json({ success: true, data: request });
+  } catch (err) { console.error('[SERVICES] POST / failed:', err.message, err.stack); res.status(500).json({ success: false, message: err.message }); }
 });
 
 // GET /api/services - admin: list requests (optional ?kind= & ?status=)

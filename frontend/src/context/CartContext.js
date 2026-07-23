@@ -32,11 +32,14 @@ export function CartProvider({ children }) {
     const variant = variantIndex != null && product.variants ? product.variants[variantIndex] : null;
     const price = variant ? variant.price : product.price;
     const label = variant ? variant.label : (product.volume || '');
+    // A size can be picked up from a different store than the product's default
+    // (e.g. a 24-pack sourced from the Beer Store while other sizes ship from Liquor Store).
+    const store = (variant && variant.store) ? variant.store : product.store;
     const cartKey = keyOf(product._id, variantIndex);
     setItems(prev => {
       const exists = prev.find(i => i.cartKey === cartKey);
       if (exists) return prev.map(i => i.cartKey === cartKey ? { ...i, qty: i.qty + 1 } : i);
-      return [...prev, { ...product, cartKey, variantIndex, price, variantLabel: label, qty: 1 }];
+      return [...prev, { ...product, cartKey, variantIndex, price, variantLabel: label, store, qty: 1 }];
     });
     setToast(`${product.name}${variant ? ` (${variant.label})` : ''} added to cart`);
     setTimeout(() => setToast(null), 2000);
@@ -100,7 +103,7 @@ export function CartProvider({ children }) {
   let bottle750Count = 0, largeBottleCount = 0, beer24Count = 0, beer12Count = 0;
   for (const i of items) {
     const label = (i.variantLabel || i.volume || '').toLowerCase();
-    if (i.category === 'Beer') {
+    if (i.category === 'Beer' || /beer/i.test(i.store || '')) {
       if (label.includes('24')) beer24Count += i.qty;
       else if (label.includes('12')) beer12Count += i.qty;
       continue;

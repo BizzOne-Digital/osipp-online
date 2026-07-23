@@ -43,11 +43,11 @@ export default function Products() {
   };
 
   const openEdit = (p) => {
-    setForm({ ...p, price: String(p.price), originalPrice: p.originalPrice ? String(p.originalPrice) : '', stock: String(p.stock), variants: (p.variants || []).map(v => ({ label: v.label, price: String(v.price), originalPrice: v.originalPrice ? String(v.originalPrice) : '', stock: String(v.stock), sku: v.sku || '' })) });
+    setForm({ ...p, price: String(p.price), originalPrice: p.originalPrice ? String(p.originalPrice) : '', stock: String(p.stock), variants: (p.variants || []).map(v => ({ label: v.label, price: String(v.price), originalPrice: v.originalPrice ? String(v.originalPrice) : '', stock: String(v.stock), sku: v.sku || '', store: v.store || '' })) });
     setImageFile(null); setImagePreview(p.image || ''); setModal(p);
   };
 
-  const addVariant = () => setForm(p => ({ ...p, variants: [...(p.variants || []), { label: '', price: '', originalPrice: '', stock: '100', sku: '' }] }));
+  const addVariant = () => setForm(p => ({ ...p, variants: [...(p.variants || []), { label: '', price: '', originalPrice: '', stock: '100', sku: '', store: '' }] }));
   const updVariant = (i, k, v) => setForm(p => ({ ...p, variants: p.variants.map((x, idx) => idx === i ? { ...x, [k]: v } : x) }));
   const removeVariant = (i) => setForm(p => ({ ...p, variants: p.variants.filter((_, idx) => idx !== i) }));
 
@@ -69,7 +69,7 @@ export default function Products() {
       formData.set('stock', parseInt(form.stock) || 100);
       const cleanVariants = (form.variants || [])
         .filter(v => v.label && v.price !== '')
-        .map(v => ({ label: v.label.trim(), price: parseFloat(v.price) || 0, originalPrice: parseFloat(v.originalPrice) || 0, stock: parseInt(v.stock) || 0, sku: v.sku || '' }));
+        .map(v => ({ label: v.label.trim(), price: parseFloat(v.price) || 0, originalPrice: parseFloat(v.originalPrice) || 0, stock: parseInt(v.stock) || 0, sku: v.sku || '', store: v.store || '' }));
       formData.set('variants', JSON.stringify(cleanVariants));
       if (imageFile) formData.append('image', imageFile);
 
@@ -183,7 +183,7 @@ export default function Products() {
 
               <div className="form-group" style={{ borderTop: '1px solid var(--gray-lt)', paddingTop: 16, marginTop: 8 }}>
                 <label className="form-label">Size Options (optional)</label>
-                <div style={{ fontSize: 11, color: 'var(--gray)', marginBottom: 10 }}>Add sizes with their own price (e.g. 1750 mL Bottle — $69.95). If none, the single price above is used. One image is shared for all sizes.</div>
+                <div style={{ fontSize: 11, color: 'var(--gray)', marginBottom: 10 }}>Add sizes with their own price (e.g. 1750 mL Bottle — $69.95). If none, the single price above is used. One image is shared for all sizes. Leave "Store" as Default unless this specific size is picked up from a different store than the product's main store.</div>
                 {(form.variants || []).map((v, i) => (
                   <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
                     <input className="form-input" style={{ flex: 2, minWidth: 140 }} value={v.label} onChange={e => updVariant(i, 'label', e.target.value)} placeholder="750 mL Bottle" />
@@ -191,6 +191,10 @@ export default function Products() {
                     <input className="form-input" style={{ flex: 1, minWidth: 80 }} type="number" step="0.01" value={v.originalPrice} onChange={e => updVariant(i, 'originalPrice', e.target.value)} placeholder="Orig. Price" />
                     <input className="form-input" style={{ flex: 1, minWidth: 70 }} type="number" value={v.stock} onChange={e => updVariant(i, 'stock', e.target.value)} placeholder="Stock" />
                     <input className="form-input" style={{ flex: 1, minWidth: 90 }} value={v.sku} onChange={e => updVariant(i, 'sku', e.target.value)} placeholder="SKU" />
+                    <select className="form-input" style={{ flex: 1, minWidth: 110 }} value={v.store || ''} onChange={e => updVariant(i, 'store', e.target.value)}>
+                      <option value="">Store: Default</option>
+                      {STORES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
                     <button className="adm-btn-danger" onClick={() => removeVariant(i)}>✕</button>
                   </div>
                 ))}

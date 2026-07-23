@@ -9,7 +9,11 @@ const variantSchema = new mongoose.Schema({
   // "Save $X" badge on this size.
   originalPrice: { type: Number, default: 0 },
   stock: { type: Number, default: 100, min: 0 },
-  sku: { type: String, default: '' }
+  sku: { type: String, default: '' },
+  // Optional per-size store override, e.g. a 24-pack that's picked up from the Beer Store
+  // specifically while other sizes of the same product come from Liquor Store. Empty = inherit
+  // the product's own `store`.
+  store: { type: String, default: '', enum: ['', 'Beer Store', 'Liquor Store', 'Convenience Store'] }
 }, { _id: false });
 
 const productSchema = new mongoose.Schema({

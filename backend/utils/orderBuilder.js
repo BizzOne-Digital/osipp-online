@@ -71,12 +71,16 @@ async function buildOrderPayload({ customer, items, addOns, tip, couponCode, pay
     let unitPrice = product.price;
     let variantLabel = '';
     let volume = product.volume;
+    let itemStore = product.store;
     const vIdx = item.variantIndex;
     if (vIdx !== undefined && vIdx !== null && vIdx !== '' && product.variants && product.variants[vIdx]) {
       const v = product.variants[vIdx];
       unitPrice = v.price;
       variantLabel = v.label;
       volume = v.label || product.volume;
+      // A size can be picked up from a different store than the product's default
+      // (e.g. a 24-pack sourced from the Beer Store while other sizes ship from Liquor Store).
+      if (v.store) itemStore = v.store;
       if (v.stock < item.quantity) { const e = new Error(`${product.name} (${v.label}) out of stock`); e.status = 400; throw e; }
       stockUpdates.push({ id: product._id, variantIndex: vIdx, qty: item.quantity });
     } else {
@@ -84,9 +88,9 @@ async function buildOrderPayload({ customer, items, addOns, tip, couponCode, pay
       stockUpdates.push({ id: product._id, variantIndex: null, qty: item.quantity });
     }
 
-    orderItems.push({ product: product._id, name: product.name, price: unitPrice, quantity: item.quantity, volume, variantLabel, store: product.store, category: product.category });
+    orderItems.push({ product: product._id, name: product.name, price: unitPrice, quantity: item.quantity, volume, variantLabel, store: itemStore, category: product.category });
     subtotal += unitPrice * item.quantity;
-    if (product.store) stores.add(product.store);
+    if (itemStore) stores.add(itemStore);
   }
 
   const orderAddOns = [];

@@ -19,6 +19,7 @@ export default function Products() {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [saving, setSaving] = useState(false);
+  const [shuffling, setShuffling] = useState(false);
 
   const fetchProducts = () => {
     setLoading(true);
@@ -88,6 +89,17 @@ export default function Products() {
 
   const upd = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
+  const shuffleProducts = async () => {
+    const label = filter === 'All' ? 'all products' : `all ${filter} products`;
+    if (!window.confirm(`Shuffle the display order of ${label} on the website? Customers will see a different product order next time they browse.`)) return;
+    setShuffling(true);
+    try {
+      await axios.post(`${API}/products/shuffle`, { category: filter });
+      setPage(1); fetchProducts();
+    } catch { alert('Failed to shuffle'); }
+    setShuffling(false);
+  };
+
   return (
     <>
       <div className="adm-topbar">
@@ -95,7 +107,12 @@ export default function Products() {
           <div className="adm-page-title">Products</div>
           <div style={{ fontSize: 13, color: 'var(--gray)', marginTop: 2 }}>{total} total &middot; Page {page} of {totalPages}</div>
         </div>
-        <button className="adm-btn adm-btn-gold" onClick={openAdd}>+ Add Product</button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button className="adm-btn-outline-s" onClick={shuffleProducts} disabled={shuffling} title="Randomize the display order customers see on the website">
+            {shuffling ? 'Shuffling...' : `🔀 Shuffle ${filter === 'All' ? 'Products' : filter}`}
+          </button>
+          <button className="adm-btn adm-btn-gold" onClick={openAdd}>+ Add Product</button>
+        </div>
       </div>
 
       <div style={{ marginBottom: 16 }}>

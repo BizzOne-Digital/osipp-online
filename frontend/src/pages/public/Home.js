@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ProductCard from '../../components/ProductCard';
 import { SearchIcon, ArrowIcon, TruckIcon, CartIcon, MapPinIcon, WhatsAppIcon, ShieldIcon, PhoneIcon } from '../../components/Icons';
+import { shuffle } from '../../utils/shuffle';
 
 const API = process.env.REACT_APP_API_URL || '/api';
 
@@ -62,7 +63,7 @@ export default function Home() {
   ];
 
   useEffect(() => {
-    axios.get(`${API}/products?limit=8&badge=Popular`).then(r => setFeatured(r.data.data)).catch(() => {});
+    axios.get(`${API}/products?limit=8&badge=Popular`).then(r => setFeatured(shuffle(r.data.data))).catch(() => {});
     axios.get(`${API}/promotions?active=true`).then(r => setPromotions(r.data.data || [])).catch(() => {});
     // Pull one representative product image per category for the floating category cards
     ['Beer', 'Spirits', 'Wine', 'Convenience'].forEach(cat => {
@@ -115,7 +116,7 @@ export default function Home() {
             {/* Trust Badges - Flyer Style */}
             <div style={{ display: 'flex', gap: 24, marginTop: 36, flexWrap: 'wrap' }}>
               {[
-                { icon: <TruckIcon />, title: '$13 Delivery', sub: 'Taxes included' },
+                { icon: <TruckIcon />, title: 'Delivery starts at $4.99', sub: 'Taxes included' },
                 { icon: <PhoneIcon />, title: '905-462-2160', sub: 'Call or text' },
                 { icon: <MapPinIcon />, title: '1 Hour', sub: 'Fast delivery' },
               ].map((b, i) => (
@@ -182,7 +183,7 @@ export default function Home() {
       <div style={{ background: 'white', padding: '18px 0', borderTop: '1px solid var(--gray-lt)', borderBottom: '1px solid var(--gray-lt)' }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'center', gap: 40, flexWrap: 'wrap' }}>
           {[
-            { icon: <TruckIcon />, text: '$13 Delivery (Tax Incl.)' },
+            { icon: <TruckIcon />, text: 'Delivery from $4.99 (Tax Incl.)' },
             { icon: <ShieldIcon />, text: '19+ ID Verified' },
             { icon: <MapPinIcon />, text: 'Mississauga & GTA' },
             { icon: <WhatsAppIcon />, text: 'WhatsApp Support' },

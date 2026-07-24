@@ -33,7 +33,10 @@ const productSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
   sku: { type: String, default: '' },
   // Optional size options. If empty, the base `price` is used (backward compatible).
-  variants: { type: [variantSchema], default: [] }
+  variants: { type: [variantSchema], default: [] },
+  // Controls display order on the public site. Admin can hit "Shuffle Products" to randomize
+  // this for all products, giving less-visible items a turn at the top of the list.
+  sortOrder: { type: Number, default: 0 }
 }, { timestamps: true });
 
 productSchema.index({ name: 'text', description: 'text', category: 'text' });

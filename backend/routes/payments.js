@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const Stripe = require('stripe');
 const Order = require('../models/Order');
+const ServiceRequest = require('../models/ServiceRequest');
 const { buildOrderPayload, commitStock } = require('../utils/orderBuilder');
 const { sendMail } = require('../utils/mailer');
 
@@ -96,25 +97,70 @@ router.post('/webhook', async (req, res) => {
   console.log(`[STRIPE] Webhook received: ${event.type}`);
 
   try {
-    const session = event.data.object;
+    const obj = event.data.object;
 
     if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
-      const order = await Order.findOne({ stripeSessionId: session.id });
-      if (!order) {
-        console.error(`[STRIPE] Webhook ${event.type}: no order found for session ${session.id}`);
-      } else if (order.paymentStatus !== 'paid') {
-        order.paymentStatus = 'paid';
-        order.stripePaymentIntentId = session.payment_intent || '';
-        await order.save();
-        console.log(`[STRIPE] Order ${order.orderId} marked paid`);
-        await sendMail(
-          `Payment Received — Order ${order.orderId}`,
-          `<h2>Stripe Payment Confirmed</h2><p><b>Order ID:</b> ${order.orderId}</p><p><b>Total:</b> $${order.total.toFixed(2)}</p>`
-        );
+      const isServicePlan = obj.metadata && obj.metadata.type === 'service-plan';
+
+      if (isServicePlan) {
+        const request = await ServiceRequest.findOne({ stripeSessionId: obj.id });
+        if (!request) {
+          console.error(`[STRIPE] Webhook ${event.type}: no service request found for session ${obj.id}`);
+        } else if (request.paymentStatus !== 'paid') {
+          request.paymentStatus = 'paid';
+          request.status = 'confirmed';
+          request.stripeCustomerId = obj.customer || '';
+          if (obj.subscription) {
+            request.stripeSubscriptionId = obj.subscription;
+            request.subscriptionStatus = 'active';
+          }
+          await request.save();
+          console.log(`[STRIPE] Service request ${request.requestId} marked paid`);
+          await sendMail(
+            `Payment Received — Seniors Plan ${request.requestId}`,
+            `<h2>Seniors Plan Payment Confirmed</h2><p><b>Request ID:</b> ${request.requestId}</p><p><b>Plan:</b> ${request.planName} — $${request.planPrice}/month (${request.billingType === 'auto-renew' ? 'Auto-Renew' : 'Pay Monthly'})</p>`
+          );
+        }
+      } else {
+        const order = await Order.findOne({ stripeSessionId: obj.id });
+        if (!order) {
+          console.error(`[STRIPE] Webhook ${event.type}: no order found for session ${obj.id}`);
+        } else if (order.paymentStatus !== 'paid') {
+          order.paymentStatus = 'paid';
+          order.stripePaymentIntentId = obj.payment_intent || '';
+          await order.save();
+          console.log(`[STRIPE] Order ${order.orderId} marked paid`);
+          await sendMail(
+            `Payment Received — Order ${order.orderId}`,
+            `<h2>Stripe Payment Confirmed</h2><p><b>Order ID:</b> ${order.orderId}</p><p><b>Total:</b> $${order.total.toFixed(2)}</p>`
+          );
+        }
       }
     } else if (event.type === 'checkout.session.async_payment_failed' || event.type === 'checkout.session.expired') {
-      await Order.findOneAndUpdate({ stripeSessionId: session.id }, { paymentStatus: 'failed' });
-      console.log(`[STRIPE] Session ${session.id} marked failed (${event.type})`);
+      await Order.findOneAndUpdate({ stripeSessionId: obj.id }, { paymentStatus: 'failed' });
+      await ServiceRequest.findOneAndUpdate({ stripeSessionId: obj.id }, { paymentStatus: 'failed' });
+      console.log(`[STRIPE] Session ${obj.id} marked failed (${event.type})`);
+    } else if (event.type === 'invoice.paid' && obj.subscription) {
+      // A recurring monthly charge succeeded for an auto-renew plan.
+      const request = await ServiceRequest.findOne({ stripeSubscriptionId: obj.subscription });
+      if (request) {
+        request.subscriptionStatus = 'active';
+        request.paymentStatus = 'paid';
+        await request.save();
+        console.log(`[STRIPE] Subscription renewal paid for ${request.requestId}`);
+        await sendMail(
+          `Monthly Plan Renewed — ${request.requestId}`,
+          `<h2>Auto-Renew Payment Received</h2><p><b>Request ID:</b> ${request.requestId}</p><p><b>Plan:</b> ${request.planName} — $${request.planPrice}/month</p>`
+        );
+      }
+    } else if (event.type === 'invoice.payment_failed' && obj.subscription) {
+      await ServiceRequest.findOneAndUpdate({ stripeSubscriptionId: obj.subscription }, { subscriptionStatus: 'past_due' });
+      console.log(`[STRIPE] Subscription payment failed: ${obj.subscription}`);
+    } else if (event.type === 'customer.subscription.deleted') {
+      await ServiceRequest.findOneAndUpdate({ stripeSubscriptionId: obj.id }, { subscriptionStatus: 'canceled' });
+      console.log(`[STRIPE] Subscription canceled: ${obj.id}`);
+    } else if (event.type === 'customer.subscription.updated') {
+      await ServiceRequest.findOneAndUpdate({ stripeSubscriptionId: obj.id }, { subscriptionStatus: obj.status });
     }
 
     res.json({ received: true });

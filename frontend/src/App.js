@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
 import { useCart } from './context/CartContext';
@@ -13,6 +13,7 @@ import Home from './pages/public/Home';
 import Products from './pages/public/Products';
 import ProductDetail from './pages/public/ProductDetail';
 import Grocery from './pages/public/Grocery';
+import GroceryTerms from './pages/public/GroceryTerms';
 import Gifts from './pages/public/Gifts';
 import Contact from './pages/public/Contact';
 import About from './pages/public/About';
@@ -33,7 +34,13 @@ import AdminSettings from './pages/admin/Settings';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  const navType = useNavigationType();
+  useEffect(() => {
+    // Only force scroll-to-top on a fresh forward navigation (PUSH) or REPLACE.
+    // On back/forward (POP) the browser/Products page restores the previous scroll
+    // position itself — forcing (0,0) here was overriding that on every back press.
+    if (navType !== 'POP') window.scrollTo(0, 0);
+  }, [pathname, navType]);
   return null;
 }
 
@@ -60,6 +67,12 @@ export default function App() {
   const { pathname } = useLocation();
   const isAdmin = pathname.startsWith('/admin');
 
+  // Take manual control of scroll restoration so our own logic (Products page, etc.)
+  // decides where to land on back/forward instead of the browser guessing mid-render.
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual';
+  }, []);
+
   return (
     <>
       <ScrollToTop />
@@ -71,6 +84,7 @@ export default function App() {
             <Route path="/products" element={<Products />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/grocery" element={<Grocery />} />
+            <Route path="/grocery-terms" element={<GroceryTerms />} />
             <Route path="/gifts" element={<Gifts />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />

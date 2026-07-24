@@ -31,6 +31,14 @@ export default function Services() {
     if (!window.confirm('Delete this request?')) return;
     try { await axios.delete(`${API}/services/${id}`); fetchRows(); setSelected(null); } catch { alert('Failed'); }
   };
+  const cancelSubscription = async (id) => {
+    if (!window.confirm('Cancel this auto-renew subscription in Stripe? The customer will not be billed again.')) return;
+    try {
+      const res = await axios.put(`${API}/services/${id}/cancel-subscription`);
+      fetchRows();
+      if (selected && selected._id === id) setSelected(res.data.data);
+    } catch (err) { alert(err.response?.data?.message || 'Failed to cancel'); }
+  };
 
   return (
     <>
@@ -51,10 +59,14 @@ export default function Services() {
               {rows.map(r => (
                 <tr key={r._id} onClick={() => setSelected(r)} style={{ cursor: 'pointer' }}>
                   <td><span className="id-badge">{r.requestId}</span></td>
-                  <td style={{ fontSize: 12 }}>{KIND_LABEL[r.kind]}{r.groceryType ? ` · ${r.groceryType}` : ''}{r.plan ? ` · ${r.plan}` : ''}</td>
+                  <td style={{ fontSize: 12 }}>{KIND_LABEL[r.kind]}{r.groceryType ? ` · ${r.groceryType}` : ''}{r.plan ? ` · ${r.plan}` : ''}{r.planName ? ` · ${r.planName}` : ''}</td>
                   <td style={{ fontWeight: 500 }}>{r.customer?.name}</td>
                   <td style={{ fontSize: 13 }}>{r.customer?.phone}</td>
-                  <td style={{ fontSize: 12, color: 'var(--gray)', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.items || r.giftDetails || r.notes || '—'}</td>
+                  <td style={{ fontSize: 12, color: 'var(--gray)', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {r.planCode
+                      ? `$${r.planPrice}/mo · ${r.billingType === 'auto-renew' ? 'Auto-Renew' : 'Manual'} · ${r.paymentStatus}${r.subscriptionStatus ? ` (${r.subscriptionStatus})` : ''}`
+                      : (r.items || r.giftDetails || r.notes || '—')}
+                  </td>
                   <td><span className={`badge ${r.status}`}>{r.status}</span></td>
                   <td style={{ fontSize: 12, color: 'var(--gray)' }}>{new Date(r.createdAt).toLocaleDateString()}</td>
                   <td onClick={e => e.stopPropagation()}><button className="adm-btn-danger" onClick={() => remove(r._id)}>Del</button></td>
@@ -75,8 +87,10 @@ export default function Services() {
               <button className="adm-close-btn" onClick={() => setSelected(null)}>✕</button>
             </div>
             <div className="adm-modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-              <Row k="Type" v={`${KIND_LABEL[selected.kind]}${selected.groceryType ? ` · ${selected.groceryType}` : ''}${selected.plan ? ` · ${selected.plan}` : ''}${selected.isMember ? ' · member' : ''}`} />
+              <Row k="Type" v={`${KIND_LABEL[selected.kind]}${selected.groceryType ? ` · ${selected.groceryType}` : ''}${selected.plan ? ` · ${selected.plan}` : ''}`} />
               {selected.frequency && <Row k="Frequency" v={selected.frequency} />}
+              {selected.planCode && <Row k="Plan" v={`${selected.planName} — $${selected.planPrice}/month (${selected.billingType === 'auto-renew' ? 'Auto-Renew' : 'Pay Monthly'})`} />}
+              {selected.planCode && <Row k="Payment" v={`${selected.paymentStatus}${selected.subscriptionStatus ? ` · subscription: ${selected.subscriptionStatus}` : ''}`} />}
               <Row k="Customer" v={selected.customer?.name} />
               <Row k="Phone" v={<a href={`tel:${selected.customer?.phone}`}>{selected.customer?.phone}</a>} />
               {selected.customer?.email && <Row k="Email" v={selected.customer.email} />}
@@ -100,7 +114,12 @@ export default function Services() {
             </div>
             <div className="adm-modal-foot" style={{ justifyContent: 'space-between' }}>
               <button className="adm-btn-danger" style={{ padding: '8px 16px' }} onClick={() => remove(selected._id)}>Delete</button>
-              <button className="adm-btn-outline-s" onClick={() => setSelected(null)}>Close</button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {selected.stripeSubscriptionId && selected.subscriptionStatus === 'active' && (
+                  <button className="adm-btn-danger" style={{ padding: '8px 16px' }} onClick={() => cancelSubscription(selected._id)}>Cancel Subscription</button>
+                )}
+                <button className="adm-btn-outline-s" onClick={() => setSelected(null)}>Close</button>
+              </div>
             </div>
           </div>
         </div>

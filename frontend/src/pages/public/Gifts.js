@@ -4,11 +4,11 @@ import { useAuth } from '../../context/AuthContext';
 import { ArrowIcon } from '../../components/Icons';
 
 const API = process.env.REACT_APP_API_URL || '/api';
+const GIFT_FEE = 13.99;
 
 export default function Gifts() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [reqId, setReqId] = useState('');
   const [form, setForm] = useState({
     name: user?.name || '', phone: user?.phone || '', email: user?.email || '',
     address: user?.address || '', city: user?.city || 'Mississauga', postalCode: user?.postalCode || '',
@@ -19,26 +19,17 @@ export default function Gifts() {
   const submit = async () => {
     if (!form.name || !form.phone) return alert('Please enter your name and phone');
     if (!form.giftDetails) return alert('Please tell us what gift you would like');
+    if (!form.address) return alert('Please enter your delivery address');
     setLoading(true);
     try {
-      const res = await axios.post(`${API}/services`, {
-        kind: 'gift',
+      const res = await axios.post(`${API}/services/checkout`, {
+        serviceType: 'gift',
         customer: { name: form.name, phone: form.phone, email: form.email, address: form.address, city: form.city, postalCode: form.postalCode },
         giftDetails: form.giftDetails, preferredDate: form.preferredDate, notes: form.notes
       });
-      setReqId(res.data.data.requestId);
-    } catch (err) { alert(err.response?.data?.message || 'Could not submit request'); }
-    setLoading(false);
+      window.location.href = res.data.url; // redirect to Stripe Checkout
+    } catch (err) { alert(err.response?.data?.message || 'Could not start checkout'); setLoading(false); }
   };
-
-  if (reqId) return (
-    <div className="section"><div className="container" style={{ maxWidth: 640, textAlign: 'center', padding: '40px 20px' }}>
-      <svg width="72" height="72" viewBox="0 0 72 72" fill="none" style={{ margin: '0 auto 20px' }}><circle cx="36" cy="36" r="36" fill="#DCFCE7" /><path d="M22 36l10 10 18-18" stroke="#16A34A" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-      <div style={{ fontFamily: 'var(--font-d)', fontSize: 24, fontWeight: 800 }}>Gift Request Received!</div>
-      <p style={{ color: 'var(--gray)', margin: '10px 0 6px' }}>We&apos;ll reach out to arrange your gift.</p>
-      <div style={{ display: 'inline-block', background: 'var(--cream)', padding: '8px 18px', borderRadius: 8, fontWeight: 700, letterSpacing: 1 }}>{reqId}</div>
-    </div></div>
-  );
 
   return (
     <div className="section">
@@ -65,7 +56,11 @@ export default function Gifts() {
             <div className="form-group"><label className="form-label">Preferred date</label><input className="form-input" type="date" value={form.preferredDate} onChange={e => upd('preferredDate', e.target.value)} /></div>
           </div>
           <div className="form-group"><label className="form-label">Notes</label><input className="form-input" value={form.notes} onChange={e => upd('notes', e.target.value)} placeholder="Message on card, timing, budget..." /></div>
-          <button className="btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={submit} disabled={loading}>{loading ? 'Submitting...' : 'Request Gift'} <ArrowIcon /></button>
+          <div style={{ background: 'var(--cream)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 14 }}>
+            <span>Gift Delivery Fee</span><span>${GIFT_FEE.toFixed(2)}</span>
+          </div>
+          <div style={{ fontSize: 11.5, color: 'var(--gray)', marginBottom: 14 }}>The cost of the gift item itself is arranged and paid separately when we confirm the details with you.</div>
+          <button className="btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={submit} disabled={loading}>{loading ? 'Redirecting...' : `Pay $${GIFT_FEE.toFixed(2)} & Request Gift`} <ArrowIcon /></button>
         </div>
       </div>
     </div>

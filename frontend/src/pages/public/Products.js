@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams, useLocation, useNavigationType } from 'react-router-dom';
 import axios from 'axios';
 import ProductCard from '../../components/ProductCard';
 import { SearchIcon, CloseIcon } from '../../components/Icons';
@@ -8,7 +8,9 @@ const API = process.env.REACT_APP_API_URL || '/api';
 const CATS = ['All', 'Spirits', 'Wine', 'Beer', 'Ready To Drink', 'Convenience'];
 
 export default function Products() {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
+  const location = useLocation();
+  const navType = useNavigationType();
   const [products, setProducts] = useState([]);
   const [filter, setFilter] = useState(params.get('cat') || 'All');
   const [search, setSearch] = useState(params.get('search') || '');
@@ -18,7 +20,19 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [subCategories, setSubCategories] = useState([]);
-  const [selectedSub, setSelectedSub] = useState('');
+  const [selectedSub, setSelectedSub] = useState(params.get('sub') || '');
+  const restoredRef = useRef(false);
+
+  // Reflect the current filter/subcategory/search into the URL (without pushing a new
+  // history entry) so that when the customer opens a product and presses Back, this same
+  // history entry still carries "Spirits / Whisky" instead of resetting to All Products.
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (filter !== 'All') next.set('cat', filter);
+    if (selectedSub) next.set('sub', selectedSub);
+    if (search) next.set('search', search);
+    setParams(next, { replace: true });
+  }, [filter, selectedSub, search, setParams]);
 
   const fetchProducts = useCallback(async (pageNum = 1, append = false) => {
     if (pageNum === 1) setLoading(true); else setLoadingMore(true);
@@ -27,7 +41,7 @@ export default function Products() {
       if (filter !== 'All') q.set('category', filter);
       if (search) q.set('search', search);
       if (selectedSub) q.set('subCategory', selectedSub);
-      q.set('sort', 'name');
+      q.set('sort', 'sortOrder');
       q.set('page', pageNum);
       q.set('limit', 24);
 
@@ -42,21 +56,68 @@ export default function Products() {
       setTotal(totalCount);
       setHasMore(more);
       setPage(pageNum);
-
+      return items.length;
     } catch (err) {
       console.error('Products fetch error:', err.message);
       if (!append) setProducts([]);
+      return 0;
+    } finally {
+      setLoading(false); setLoadingMore(false);
     }
-    setLoading(false); setLoadingMore(false);
   }, [filter, search, selectedSub]);
 
-  useEffect(() => { setPage(1); fetchProducts(1, false); }, [filter, search, selectedSub]);
+  // On a fresh filter change (not a back/forward restore), reset to page 1 as usual.
+  // On a POP navigation (Back button), re-fetch as many pages as were loaded before
+  // (tracked in sessionStorage) so "Load More" state is rebuilt, then restore scroll.
+  useEffect(() => {
+    if (navType === 'POP' && !restoredRef.current) {
+      restoredRef.current = true;
+      const key = `products-pages:${location.key}`;
+      const savedPages = parseInt(sessionStorage.getItem(key), 10) || 1;
+      (async () => {
+        setLoading(true);
+        let items = [];
+        for (let p = 1; p <= savedPages; p++) {
+          // eslint-disable-next-line no-await-in-loop
+          const count = await fetchProducts(p, p > 1);
+          items.push(count);
+          if (count === 0) break;
+        }
+        setLoading(false);
+      })();
+    } else {
+      setPage(1);
+      fetchProducts(1, false);
+    }
+  }, [filter, search, selectedSub, navType, location.key, fetchProducts]);
 
   useEffect(() => {
     axios.get(`${API}/products/subcategories?category=${encodeURIComponent(filter)}`)
       .then(res => setSubCategories(res.data?.data || []))
       .catch(() => setSubCategories([]));
   }, [filter]);
+
+  // Track how many pages have been loaded (for "Load More") and the scroll position,
+  // keyed to this specific history entry so Back restores exactly where the customer left off.
+  useEffect(() => {
+    sessionStorage.setItem(`products-pages:${location.key}`, String(page));
+  }, [page, location.key]);
+
+  useEffect(() => {
+    const onScroll = () => sessionStorage.setItem(`products-scroll:${location.key}`, String(window.scrollY));
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [location.key]);
+
+  useEffect(() => {
+    if (navType === 'POP' && !loading) {
+      const saved = sessionStorage.getItem(`products-scroll:${location.key}`);
+      if (saved) {
+        const y = parseInt(saved, 10);
+        requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, y)));
+      }
+    }
+  }, [loading, navType, location.key]);
 
   const loadMore = () => fetchProducts(page + 1, true);
 

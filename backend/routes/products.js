@@ -80,6 +80,22 @@ router.get('/all', protect, adminOnly, async (req, res) => {
   }
 });
 
+// POST /api/products/shuffle - admin: randomize display order for all products (optionally one category)
+router.post('/shuffle', protect, adminOnly, async (req, res) => {
+  try {
+    const { category } = req.body;
+    const filter = category && category !== 'All' ? { category } : {};
+    const products = await Product.find(filter).select('_id');
+    const ops = products.map(p => ({
+      updateOne: { filter: { _id: p._id }, update: { sortOrder: Math.floor(Math.random() * 1000000) } }
+    }));
+    if (ops.length) await Product.bulkWrite(ops);
+    res.json({ success: true, message: `Shuffled ${ops.length} products` });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // GET /api/products/subcategories - public - all subcategories for a category (not just the current page)
 router.get('/subcategories', async (req, res) => {
   try {

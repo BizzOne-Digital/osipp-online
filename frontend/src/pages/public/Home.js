@@ -116,7 +116,7 @@ export default function Home() {
             {/* Trust Badges - Flyer Style */}
             <div style={{ display: 'flex', gap: 24, marginTop: 36, flexWrap: 'wrap' }}>
               {[
-                { icon: <TruckIcon />, title: 'Delivery starts at $4.99', sub: 'Taxes included' },
+                { icon: <TruckIcon />, title: 'Delivery starts at $4.99', sub: 'Processing and handling charges apply at checkout' },
                 { icon: <PhoneIcon />, title: '905-462-2160', sub: 'Call or text' },
                 { icon: <MapPinIcon />, title: '1 Hour', sub: 'Fast delivery' },
               ].map((b, i) => (
@@ -183,7 +183,7 @@ export default function Home() {
       <div style={{ background: 'white', padding: '18px 0', borderTop: '1px solid var(--gray-lt)', borderBottom: '1px solid var(--gray-lt)' }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'center', gap: 40, flexWrap: 'wrap' }}>
           {[
-            { icon: <TruckIcon />, text: 'Delivery from $4.99 (Tax Incl.)' },
+            { icon: <TruckIcon />, text: 'Delivery from $4.99 — Processing and handling charges apply at checkout' },
             { icon: <ShieldIcon />, text: '19+ ID Verified' },
             { icon: <MapPinIcon />, text: 'Mississauga & GTA' },
             { icon: <WhatsAppIcon />, text: 'WhatsApp Support' },

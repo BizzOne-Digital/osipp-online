@@ -160,7 +160,7 @@ export default function ProductDetail() {
                     if (!Number.isNaN(n)) setQty(Math.max(1, Math.min(stock || 99, n)));
                   }}
                   onBlur={() => setQty(q => (q === '' || Number.isNaN(Number(q))) ? 1 : q)}
-                  style={{ minWidth: 36, width: 48, textAlign: 'center', border: 'none', outline: 'none', background: 'transparent', fontSize: 14, fontWeight: 600, MozAppearance: 'textfield' }}
+                  style={{ minWidth: 36, width: 48, textAlign: 'center', border: 'none', outline: 'none', background: 'transparent', fontSize: 16, fontWeight: 600, MozAppearance: 'textfield' }}
                 />
                 <button className="qty-btn" onClick={() => setQty(q => Math.min(stock || 99, (q === '' ? 0 : Number(q)) + 1))}><PlusIcon /></button>
               </div>

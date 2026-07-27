@@ -137,7 +137,7 @@ export default function CartDrawer({ onClose }) {
                 </div>
               ) : (
                 <div style={{display:'flex',gap:8}}>
-                  <input value={couponInput} onChange={e=>setCouponInput(e.target.value)} placeholder="Coupon code" style={{flex:1,padding:'8px 12px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:13,outline:'none'}}/>
+                  <input value={couponInput} onChange={e=>setCouponInput(e.target.value)} placeholder="Coupon code" style={{flex:1,padding:'8px 12px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:16,outline:'none'}}/>
                   <button onClick={()=>applyCoupon(couponInput)} disabled={couponLoading||!couponInput} style={{padding:'8px 14px',background:'var(--black)',color:'white',border:'none',borderRadius:6,fontSize:12,fontWeight:600,cursor:'pointer',opacity:couponLoading?.5:1}}>Apply</button>
                 </div>
               )}
@@ -183,7 +183,7 @@ export default function CartDrawer({ onClose }) {
                 {tipPresets.map(pct=>(
                   <button key={pct} onClick={()=>pickTipPercent(pct)} style={tipBtn(!customTip && tipPercent===pct)}>{pct}%</button>
                 ))}
-                <input value={customTip} onChange={e=>onCustomTip(e.target.value)} type="number" min="0" placeholder="Custom %" style={{width:90,padding:'8px 10px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:13,outline:'none'}}/>
+                <input value={customTip} onChange={e=>onCustomTip(e.target.value)} type="number" min="0" placeholder="Custom %" style={{width:90,padding:'8px 10px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:16,outline:'none'}}/>
                 <button onClick={()=>pickTipPercent(0)} style={tipBtn(!customTip && tipPercent===0)}>No Tip</button>
               </div>
               {tipPercent > 0 && <div style={{fontSize:11,color:'var(--gray)',marginTop:6}}>{tipPercent}% = ${(parseFloat(tip)||0).toFixed(2)}</div>}

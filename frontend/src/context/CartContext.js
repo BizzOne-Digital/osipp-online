@@ -119,7 +119,13 @@ export function CartProvider({ children }) {
   const baseHandlingFee = subtotal > 0 ? DELIVERY_TIERS[deliveryTier].handling : 0;
   const deliveryStops = distinctStores.map(store => ({ store, fee: null }));
 
-  const hasTobacco = items.some(i => i.isTobacco) || (settings?.addOns || []).some(s => s.isTobacco && addOns.find(a => a.name === s.name));
+  // Safety net: catches smoke/tobacco items by name even if the admin forgot to tick the
+  // "Tobacco" checkbox on that specific product/add-on — mirrors backend/utils/orderBuilder.js.
+  const TOBACCO_KEYWORDS = /cigarette|cigar\b|tobacco|\bsmoke(s)?\b|vape|vaping|e-?cig/i;
+  const looksLikeTobacco = (name, category, subCategory) =>
+    TOBACCO_KEYWORDS.test(name || '') || TOBACCO_KEYWORDS.test(category || '') || TOBACCO_KEYWORDS.test(subCategory || '');
+  const hasTobacco = items.some(i => i.isTobacco || looksLikeTobacco(i.name, i.category, i.subCategory))
+    || (settings?.addOns || []).some(s => (s.isTobacco || looksLikeTobacco(s.name)) && addOns.find(a => a.name === s.name));
   const cardFeePercent = settings?.cardProcessingFeePercent != null ? settings.cardProcessingFeePercent : 3.2;
 
   const activeAddOns = (settings?.addOns || []).filter(a => a.isActive);

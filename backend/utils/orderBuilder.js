@@ -18,6 +18,12 @@ const DELIVERY_TIERS = {
   largeHeavy: { label: 'Large or Heavy Order', delivery: 11.99, handling: 15.99 }
 };
 
+// Safety net for smoke/tobacco detection: catches products/add-ons by name even if the
+// admin forgot to tick the "Tobacco" checkbox on that specific item.
+const TOBACCO_KEYWORDS = /cigarette|cigar\b|tobacco|\bsmoke(s)?\b|vape|vaping|e-?cig/i;
+const looksLikeTobacco = (name, category, subCategory) =>
+  TOBACCO_KEYWORDS.test(name || '') || TOBACCO_KEYWORDS.test(category || '') || TOBACCO_KEYWORDS.test(subCategory || '');
+
 // Parses a free-text volume/variant label (e.g. "1.75 L Bottle", "24 Pack", "750 mL")
 // into approximate liters, so we can bucket items into the delivery-fee tiers above.
 function parseLiters(label) {
@@ -68,7 +74,7 @@ async function buildOrderPayload({ customer, items, addOns, tip, couponCode, pay
   for (const item of items) {
     const product = await Product.findById(item.product);
     if (!product) { const e = new Error('Product not found'); e.status = 404; throw e; }
-    if (product.isTobacco) hasTobacco = true;
+    if (product.isTobacco || looksLikeTobacco(product.name, product.category, product.subCategory)) hasTobacco = true;
 
     let unitPrice = product.price;
     let variantLabel = '';
@@ -104,7 +110,7 @@ async function buildOrderPayload({ customer, items, addOns, tip, couponCode, pay
       const qty = Math.max(1, parseInt(a.quantity) || 1);
       orderAddOns.push({ name: match.name, price: match.price, quantity: qty });
       addOnsTotal += match.price * qty;
-      if (match.isTobacco) hasTobacco = true;
+      if (match.isTobacco || looksLikeTobacco(match.name)) hasTobacco = true;
     }
   }
 

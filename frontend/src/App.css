@@ -92,7 +92,7 @@ a{text-decoration:none;color:inherit}
 .search-wrap{background:var(--white);border:2px solid var(--gray-lt);border-radius:var(--r-xl);padding:6px 6px 6px 20px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-lg);transition:border-color var(--ease)}
 .search-wrap.hero-search{margin:0}
 .search-wrap:focus-within{border-color:var(--gold)}
-.search-input{flex:1;border:none;outline:none;font-size:15px;font-family:var(--font-b);background:transparent;color:var(--black);padding:10px 0}
+.search-input{flex:1;border:none;outline:none;font-size:16px;font-family:var(--font-b);background:transparent;color:var(--black);padding:10px 0}
 .search-input::placeholder{color:var(--gray)}
 
 /* ── Sections ──────────────────────────────── */
@@ -176,7 +176,7 @@ a{text-decoration:none;color:inherit}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
 .form-group{margin-bottom:16px}
 .form-label{font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;display:block}
-.form-input{width:100%;padding:12px 16px;border:1.5px solid var(--gray-lt);border-radius:var(--r-sm);font-size:14px;font-family:var(--font-b);color:var(--black);transition:border-color var(--ease);outline:none;background:var(--white)}
+.form-input{width:100%;padding:12px 16px;border:1.5px solid var(--gray-lt);border-radius:var(--r-sm);font-size:16px;font-family:var(--font-b);color:var(--black);transition:border-color var(--ease);outline:none;background:var(--white)}
 .form-input:focus{border-color:var(--gold)}
 textarea.form-input{resize:vertical}
 .payment-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
@@ -294,6 +294,9 @@ textarea.form-input{resize:vertical}
 @media(max-width:768px){
   .nav-links{display:none}
   .mobile-menu-btn{display:flex}
+  /* Search, WhatsApp and Account move into the hamburger menu on mobile — only
+     Cart + Hamburger stay in the top bar, so it stops overflowing on small screens. */
+  .nav-search-wrap,.nav-wa-btn,.nav-user-wrap{display:none}
   .cat-grid{grid-template-columns:repeat(2,1fr);row-gap:64px}
   .cat-card{padding-top:70px}
   .cat-img{top:-50px;height:130px}
@@ -319,6 +322,7 @@ textarea.form-input{resize:vertical}
   .cart-drawer{width:100%}
   .modal{border-radius:var(--r-lg);max-height:100vh}
   .btn-wa span{display:none}
+  .nav-wa-full span{display:inline}
   .payment-options{gap:8px}
   .pay-opt{padding:10px 8px}
   .pay-opt-name{font-size:12px}

@@ -34,20 +34,20 @@ export default function Navbar({ onCartOpen }) {
         </Link>
         <div className="nav-links">{links.map(l=><Link key={l.to} to={l.to} className={`nav-link${pathname===l.to?' active':''}`}>{l.label}</Link>)}</div>
         <div className="nav-actions">
-          <div style={{position:'relative'}}>
+          <div className="nav-search-wrap" style={{position:'relative'}}>
             <button className="btn-icon" onClick={()=>setSearchOpen(!searchOpen)}><SearchIcon/></button>
             {searchOpen && (
               <form onSubmit={runSearch} style={{position:'absolute',right:0,top:'110%',background:'white',border:'1.5px solid var(--gray-lt)',borderRadius:10,padding:8,zIndex:50,boxShadow:'0 8px 24px rgba(0,0,0,.12)',display:'flex',gap:6,animation:'fadeUp .15s ease',width:'min(260px, calc(100vw - 32px))',maxWidth:'calc(100vw - 32px)',boxSizing:'border-box'}}>
-                <input autoFocus value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search products..." style={{flex:1,minWidth:0,padding:'8px 10px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:13,outline:'none'}}/>
+                <input autoFocus value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search products..." style={{flex:1,minWidth:0,padding:'8px 10px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:16,outline:'none'}}/>
                 <button type="submit" style={{flexShrink:0,padding:'8px 14px',background:'var(--black)',color:'white',border:'none',borderRadius:6,fontSize:12,fontWeight:600,cursor:'pointer'}}>Go</button>
               </form>
             )}
           </div>
           <button className="btn-icon" onClick={onCartOpen}><CartIcon/>{itemCount>0 && <span className="cart-badge">{itemCount}</span>}</button>
-          <button className="btn-wa" onClick={()=>window.open('https://wa.me/19054622160','_blank')}><WhatsAppIcon/><span>WhatsApp</span></button>
+          <button className="btn-wa nav-wa-btn" onClick={()=>window.open('https://wa.me/19054622160','_blank')}><WhatsAppIcon/><span>WhatsApp</span></button>
 
           {isAuth ? (
-            <div style={{position:'relative'}}>
+            <div className="nav-user-wrap" style={{position:'relative'}}>
               <button className="btn-icon" onClick={()=>setUserMenu(!userMenu)} style={{fontSize:11,fontWeight:700}}><UserIcon/></button>
               {userMenu && (
                 <div style={{position:'absolute',right:0,top:'110%',background:'white',border:'1.5px solid var(--gray-lt)',borderRadius:10,padding:8,minWidth:180,zIndex:50,boxShadow:'0 8px 24px rgba(0,0,0,.12)',animation:'fadeUp .15s ease'}}>
@@ -60,7 +60,7 @@ export default function Navbar({ onCartOpen }) {
               )}
             </div>
           ) : (
-            <Link to="/login" className="btn-icon" style={{fontSize:11,fontWeight:700}}><UserIcon/></Link>
+            <Link to="/login" className="btn-icon nav-user-wrap" style={{fontSize:11,fontWeight:700}}><UserIcon/></Link>
           )}
 
           <button className="btn-icon mobile-menu-btn" onClick={()=>setMobileOpen(!mobileOpen)}>{mobileOpen?<CloseIcon/>:<MenuIcon/>}</button>
@@ -69,14 +69,17 @@ export default function Navbar({ onCartOpen }) {
       {mobileOpen && (
         <div style={{position:'absolute',top:68,left:0,right:0,background:'white',borderBottom:'1.5px solid var(--gray-lt)',padding:'12px 24px',zIndex:99,animation:'fadeUp .2s ease'}}>
           <form onSubmit={runSearch} style={{display:'flex',gap:6,padding:'8px 0 16px'}}>
-            <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search products..." style={{flex:1,padding:'10px 12px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:13,outline:'none'}}/>
+            <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search products..." style={{flex:1,padding:'10px 12px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:16,outline:'none'}}/>
             <button type="submit" style={{padding:'10px 16px',background:'var(--black)',color:'white',border:'none',borderRadius:6,fontSize:12,fontWeight:600,cursor:'pointer'}}>Go</button>
           </form>
           {links.map(l=><Link key={l.to} to={l.to} className={`nav-link${pathname===l.to?' active':''}`} style={{display:'block',padding:'12px 0'}} onClick={()=>setMobileOpen(false)}>{l.label}</Link>)}
           {isAuth ? <>
             <Link to="/account" style={{display:'block',padding:'12px 0'}} className="nav-link" onClick={()=>setMobileOpen(false)}>My Account</Link>
             <Link to="/wishlist" style={{display:'block',padding:'12px 0'}} className="nav-link" onClick={()=>setMobileOpen(false)}>Wishlist</Link>
+            {isAdmin && <Link to="/admin" style={{display:'block',padding:'12px 0'}} className="nav-link" onClick={()=>setMobileOpen(false)}>Admin Panel</Link>}
+            <button onClick={()=>{logout();setMobileOpen(false);}} style={{display:'block',width:'100%',textAlign:'left',padding:'12px 0',border:'none',background:'none',cursor:'pointer',fontSize:14,fontWeight:500,color:'var(--red)'}}>Logout</button>
           </> : <Link to="/login" style={{display:'block',padding:'12px 0'}} className="nav-link" onClick={()=>setMobileOpen(false)}>Sign In</Link>}
+          <button className="btn-wa nav-wa-full" style={{width:'100%',justifyContent:'center',marginTop:8}} onClick={()=>{window.open('https://wa.me/19054622160','_blank');setMobileOpen(false);}}><WhatsAppIcon/><span>Chat on WhatsApp</span></button>
         </div>
       )}
     </nav>

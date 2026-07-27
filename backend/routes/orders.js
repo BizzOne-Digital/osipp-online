@@ -1,9 +1,12 @@
 const router = require('express').Router();
+const Stripe = require('stripe');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { protect, adminOnly } = require('../middleware/auth');
 const { sendMail } = require('../utils/mailer');
 const { buildOrderPayload, commitStock } = require('../utils/orderBuilder');
+
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 // POST /api/orders - place order with optional coupon, add-ons, tip, stop-based delivery
 router.post('/', async (req, res) => {
@@ -67,11 +70,31 @@ router.get('/', protect, adminOnly, async (req, res) => {
   } catch (err) { console.error('[ORDERS] request failed:', err.message, err.stack); res.status(500).json({ success: false, message: err.message }); }
 });
 
-// GET /api/orders/track/:orderId
+// GET /api/orders/track/:orderId - self-heals if the Stripe webhook hasn't landed yet by
+// checking Stripe directly and sending the "Payment Confirmed" email right here if needed.
 router.get('/track/:orderId', async (req, res) => {
   try {
     const order = await Order.findOne({ orderId: req.params.orderId.toUpperCase() });
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    if (order.paymentMethod === 'stripe' && order.paymentStatus === 'pending' && order.stripeSessionId && stripe) {
+      try {
+        const session = await stripe.checkout.sessions.retrieve(order.stripeSessionId);
+        if (session.payment_status === 'paid' || session.status === 'complete') {
+          order.paymentStatus = 'paid';
+          order.stripePaymentIntentId = session.payment_intent || '';
+          await order.save();
+          console.log(`[ORDERS] Order ${order.orderId} marked paid (self-heal via track)`);
+          await sendMail(
+            `Payment Received — Order ${order.orderId}`,
+            `<h2>Stripe Payment Confirmed</h2><p><b>Order ID:</b> ${order.orderId}</p><p><b>Total:</b> $${order.total.toFixed(2)}</p>`
+          );
+        }
+      } catch (stripeErr) {
+        console.error(`[ORDERS] Stripe session check failed for ${order.orderId}:`, stripeErr.message);
+      }
+    }
+
     res.json({ success: true, data: order });
   } catch (err) { console.error('[ORDERS] request failed:', err.message, err.stack); res.status(500).json({ success: false, message: err.message }); }
 });

@@ -63,10 +63,12 @@ async function buildOrderPayload({ customer, items, addOns, tip, couponCode, pay
   const orderItems = [];
   const stores = new Set();
   const stockUpdates = [];
+  let hasTobacco = false;
 
   for (const item of items) {
     const product = await Product.findById(item.product);
     if (!product) { const e = new Error('Product not found'); e.status = 404; throw e; }
+    if (product.isTobacco) hasTobacco = true;
 
     let unitPrice = product.price;
     let variantLabel = '';
@@ -95,7 +97,6 @@ async function buildOrderPayload({ customer, items, addOns, tip, couponCode, pay
 
   const orderAddOns = [];
   let addOnsTotal = 0;
-  let hasTobacco = false;
   if (Array.isArray(addOns)) {
     for (const a of addOns) {
       const match = (settings.addOns || []).find(s => s.name === a.name && s.isActive);

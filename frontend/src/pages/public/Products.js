@@ -21,6 +21,7 @@ export default function Products() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [subCategories, setSubCategories] = useState([]);
   const [selectedSub, setSelectedSub] = useState(params.get('sub') || '');
+  const [onSaleOnly, setOnSaleOnly] = useState(params.get('sale') === 'true');
   const restoredRef = useRef(false);
 
   // Reflect the current filter/subcategory/search into the URL (without pushing a new
@@ -31,8 +32,9 @@ export default function Products() {
     if (filter !== 'All') next.set('cat', filter);
     if (selectedSub) next.set('sub', selectedSub);
     if (search) next.set('search', search);
+    if (onSaleOnly) next.set('sale', 'true');
     setParams(next, { replace: true });
-  }, [filter, selectedSub, search, setParams]);
+  }, [filter, selectedSub, search, onSaleOnly, setParams]);
 
   const fetchProducts = useCallback(async (pageNum = 1, append = false) => {
     if (pageNum === 1) setLoading(true); else setLoadingMore(true);
@@ -41,6 +43,7 @@ export default function Products() {
       if (filter !== 'All') q.set('category', filter);
       if (search) q.set('search', search);
       if (selectedSub) q.set('subCategory', selectedSub);
+      if (onSaleOnly) q.set('onSale', 'true');
       q.set('sort', 'sortOrder');
       q.set('page', pageNum);
       q.set('limit', 24);
@@ -64,7 +67,7 @@ export default function Products() {
     } finally {
       setLoading(false); setLoadingMore(false);
     }
-  }, [filter, search, selectedSub]);
+  }, [filter, search, selectedSub, onSaleOnly]);
 
   // On a fresh filter change (not a back/forward restore), reset to page 1 as usual.
   // On a POP navigation (Back button), re-fetch as many pages as were loaded before
@@ -126,7 +129,7 @@ export default function Products() {
       <div className="container">
         <div className="section-header">
           <div className="section-title">All Products</div>
-          <div className="section-sub">{total} products available</div>
+          <div className="section-sub">{loading ? 'Loading products...' : `${total} products available`}</div>
         </div>
 
         <div className="search-wrap" style={{ marginBottom: 20, boxShadow: 'none', border: '1.5px solid var(--gray-lt)', borderRadius: 'var(--r-md)' }}>
@@ -137,6 +140,7 @@ export default function Products() {
 
         <div className="prod-filters" style={{ marginBottom: 16 }}>
           {CATS.map(c => <button key={c} className={`filter-btn${filter === c ? ' active' : ''}`} onClick={() => { setFilter(c); setSelectedSub(''); }}>{c}</button>)}
+          <button className={`filter-btn${onSaleOnly ? ' active' : ''}`} style={onSaleOnly ? { background: 'var(--red)', color: 'white', borderColor: 'var(--red)' } : { color: 'var(--red)', borderColor: 'var(--red)' }} onClick={() => setOnSaleOnly(v => !v)}>🔥 On Sale</button>
         </div>
 
         {subCategories.length > 0 && (

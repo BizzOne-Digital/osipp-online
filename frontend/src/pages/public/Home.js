@@ -97,7 +97,7 @@ export default function Home() {
           <div style={{ maxWidth: 620 }}>
             <div className="hero-eyebrow">
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ADE80', display: 'inline-block' }} />
-              Delivering in Mississauga & GTA
+              Delivering in Mississauga, Oakville &amp; Milton
             </div>
             <h1 className="hero-title">
               O'SIPP Alcohol Delivery<br />Service <span className="gold">In Your City</span>
@@ -185,7 +185,7 @@ export default function Home() {
           {[
             { icon: <TruckIcon />, text: 'Delivery from $4.99 — Processing and handling charges apply at checkout' },
             { icon: <ShieldIcon />, text: '19+ ID Verified' },
-            { icon: <MapPinIcon />, text: 'Mississauga & GTA' },
+            { icon: <MapPinIcon />, text: 'Mississauga, Oakville & Milton' },
             { icon: <WhatsAppIcon />, text: 'WhatsApp Support' },
           ].map((t, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 600, color: 'var(--gray)' }}>
@@ -250,7 +250,7 @@ export default function Home() {
             {[
               { n: '01', icon: <SearchIcon />, t: 'Browse & Search', d: 'Find your favourite beers, spirits, wines and more from 3 local stores.' },
               { n: '02', icon: <CartIcon />, t: 'Add to Cart', d: 'Select products, pick quantities and review your order before checkout.' },
-              { n: '03', icon: <MapPinIcon />, t: 'Enter Address', d: 'Provide your Mississauga/GTA address. Choose cash, card or Interac.' },
+              { n: '03', icon: <MapPinIcon />, t: 'Enter Address', d: 'Provide your Mississauga, Oakville or Milton address. Choose cash, card or Interac.' },
               { n: '04', icon: <TruckIcon />, t: '1 Hour Delivery', d: 'We pick, pack and deliver to your door. 19+ ID required at delivery.' },
             ].map(s => (
               <div key={s.n} className="how-step">
@@ -271,7 +271,7 @@ export default function Home() {
             Ready to Order?
           </h2>
           <p style={{ color: 'var(--gray)', fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
-            Call or text <strong>905-462-2160</strong> or order online. Delivery starts at $4.99 — processing and handling charges apply at checkout. Delivery in about 1 hour to Mississauga & GTA.
+            Call or text <strong>905-462-2160</strong> or order online. Delivery starts at $4.99 — processing and handling charges apply at checkout. Delivery in about 1 hour to Mississauga, Oakville &amp; Milton.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
             <Link to="/products" className="btn-primary" style={{ padding: '15px 32px', fontSize: 16 }}>Browse Products <ArrowIcon /></Link>

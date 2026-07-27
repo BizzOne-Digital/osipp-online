@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="footer-grid">
           <div>
             <img src="/images/logo.png" alt="O'SIPP Delivery" style={{ height: 56, width: 'auto', objectFit: 'contain', marginBottom: 14 }} />
-            <div className="footer-desc">Alcohol delivery service in Mississauga & GTA. Delivery starts at $4.99 — processing and handling charges apply at checkout. Delivery in about 1 hour. 19+ ID required.</div>
+            <div className="footer-desc">Alcohol delivery service in Mississauga, Oakville &amp; Milton. Delivery starts at $4.99 — processing and handling charges apply at checkout. Delivery in about 1 hour. 19+ ID required.</div>
             <div className="footer-socials">
               <button className="social-btn" onClick={() => window.open('https://www.instagram.com/osipp_delivery', '_blank')}><InstagramIcon /></button>
               <button className="social-btn" onClick={() => window.open('https://wa.me/19054622160', '_blank')}><WhatsAppIcon /></button>
@@ -33,7 +33,7 @@ export default function Footer() {
             <div className="footer-col-title">Contact</div>
             <div className="footer-link">905-462-2160</div>
             <div className="footer-link">info741@osipp.ca</div>
-            <div className="footer-link">Mississauga & GTA, ON</div>
+            <div className="footer-link">Mississauga, Oakville &amp; Milton, ON</div>
             <button className="btn-wa" style={{ fontSize: 12, padding: '8px 14px', marginTop: 16 }}
               onClick={() => window.open('https://wa.me/19054622160', '_blank')}>
               <WhatsAppIcon size={14} /> Chat on WhatsApp

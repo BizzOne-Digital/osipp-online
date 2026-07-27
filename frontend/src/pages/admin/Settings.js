@@ -192,8 +192,9 @@ export default function Settings() {
                 Show tip option at checkout
               </label>
               <div className="form-group">
-                <label className="form-label">Tip preset amounts ($, comma separated)</label>
-                <input className="form-input" defaultValue={(settings.tipPresets || []).join(', ')} onBlur={e => updTipPresets(e.target.value)} placeholder="3, 5, 10" />
+                <label className="form-label">Tip preset percentages (%, comma separated)</label>
+                <input className="form-input" defaultValue={(settings.tipPresets || []).join(', ')} onBlur={e => updTipPresets(e.target.value)} placeholder="10, 15, 20" />
+                <div style={{ fontSize: 11, color: 'var(--gray)', marginTop: 4 }}>"No Tip" always shows last, after these options.</div>
               </div>
             </div>
 

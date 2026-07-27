@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { CloseIcon, ArrowIcon, BottleSVG, MinusIcon, PlusIcon } from './Icons';
@@ -20,6 +20,12 @@ export default function CartDrawer({ onClose }) {
   const [form, setForm] = useState({ name: user?.name||'', phone: user?.phone||'', email: user?.email||'', address: user?.address||'', city: user?.city||'Mississauga', postalCode: user?.postalCode||'' });
   // Tobacco/smoke orders can't be paid cash on delivery — default them straight to card.
   const [payMethod, setPayMethod] = useState(hasTobacco ? 'stripe' : 'cash');
+  // Cart contents (and hasTobacco) can change after this component already mounted —
+  // e.g. a tobacco item added while the drawer is open — so re-sync away from cash/interac
+  // whenever that happens, instead of leaving the initial useState value stuck.
+  useEffect(() => {
+    if (hasTobacco && !['stripe', 'card'].includes(payMethod)) setPayMethod('stripe');
+  }, [hasTobacco, payMethod]);
   const { handlingFee, total } = getTotals(payMethod);
   const [orderId, setOrderId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -55,8 +61,17 @@ export default function CartDrawer({ onClose }) {
     setLoading(false);
   };
 
-  const pickTip = (amt) => { setTip(amt); setCustomTip(''); };
-  const onCustomTip = (v) => { setCustomTip(v); setTip(parseFloat(v) || 0); };
+  // Tips are chosen as a % of subtotal, then converted to a dollar amount for the
+  // actual `tip` total (which the backend/getTotals expects as a flat dollar figure).
+  const [tipPercent, setTipPercent] = useState(0);
+  const pctToDollars = (pct) => Math.round(subtotal * pct / 100 * 100) / 100;
+  const pickTipPercent = (pct) => { setTipPercent(pct); setCustomTip(''); setTip(pctToDollars(pct)); };
+  const onCustomTip = (v) => {
+    setCustomTip(v);
+    const pct = parseFloat(v) || 0;
+    setTipPercent(pct);
+    setTip(pctToDollars(pct));
+  };
 
   return (
     <>
@@ -164,13 +179,14 @@ export default function CartDrawer({ onClose }) {
           {tipEnabled && (
             <div style={{marginBottom:12}}>
               <div className="form-label" style={{marginBottom:6}}>Tip for the driver</div>
-              <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                <button onClick={()=>pickTip(0)} style={tipBtn(!customTip && (parseFloat(tip)||0)===0)}>No tip</button>
-                {tipPresets.map(t=>(
-                  <button key={t} onClick={()=>pickTip(t)} style={tipBtn(!customTip && (parseFloat(tip)||0)===t)}>${t}</button>
+              <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
+                {tipPresets.map(pct=>(
+                  <button key={pct} onClick={()=>pickTipPercent(pct)} style={tipBtn(!customTip && tipPercent===pct)}>{pct}%</button>
                 ))}
-                <input value={customTip} onChange={e=>onCustomTip(e.target.value)} type="number" min="0" placeholder="Custom $" style={{width:90,padding:'8px 10px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:13,outline:'none'}}/>
+                <input value={customTip} onChange={e=>onCustomTip(e.target.value)} type="number" min="0" placeholder="Custom %" style={{width:90,padding:'8px 10px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:13,outline:'none'}}/>
+                <button onClick={()=>pickTipPercent(0)} style={tipBtn(!customTip && tipPercent===0)}>No Tip</button>
               </div>
+              {tipPercent > 0 && <div style={{fontSize:11,color:'var(--gray)',marginTop:6}}>{tipPercent}% = ${(parseFloat(tip)||0).toFixed(2)}</div>}
             </div>
           )}
 

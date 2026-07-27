@@ -80,7 +80,7 @@ export default function Grocery() {
       <div className="container" style={{ maxWidth: 720 }}>
         <div className="section-header" style={{ textAlign: 'center' }}>
           <div className="section-title">Grocery Pickup &amp; Delivery</div>
-          <div className="section-sub">We shop, pick up and deliver to your door across Mississauga &amp; GTA.</div>
+          <div className="section-sub">We shop, pick up and deliver to your door across Mississauga, Oakville &amp; Milton.</div>
         </div>
 
         {/* progress hint */}

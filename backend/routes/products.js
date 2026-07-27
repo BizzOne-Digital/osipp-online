@@ -17,7 +17,7 @@ try {
 // GET /api/products - public
 router.get('/', async (req, res) => {
   try {
-    const { category, store, search, badge, subCategory, page = 1, limit = 100, sort = '-createdAt', minPrice, maxPrice } = req.query;
+    const { category, store, search, badge, subCategory, onSale, page = 1, limit = 100, sort = '-createdAt', minPrice, maxPrice } = req.query;
     const filter = { isActive: true };
     if (category && category !== 'All') filter.category = category;
     if (store) filter.store = store;
@@ -28,13 +28,26 @@ router.get('/', async (req, res) => {
       if (minPrice) filter.price.$gte = parseFloat(minPrice);
       if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
     }
+
+    // Both of these need their own $or — combine into $and so they don't clobber each other.
+    const orGroups = [];
     if (search) {
-      filter.$or = [
+      orGroups.push([
         { name: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } },
         { subCategory: { $regex: search, $options: 'i' } }
-      ];
+      ]);
     }
+    if (onSale === 'true') {
+      // A product is "on sale" if it (or any of its sizes) has an Original Price set above
+      // the current price — this is exactly how the admin marks something as on sale.
+      orGroups.push([
+        { originalPrice: { $gt: 0 } },
+        { 'variants.originalPrice': { $gt: 0 } }
+      ]);
+    }
+    if (orGroups.length === 1) filter.$or = orGroups[0];
+    else if (orGroups.length > 1) filter.$and = orGroups.map(g => ({ $or: g }));
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const [products, total] = await Promise.all([

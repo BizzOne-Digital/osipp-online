@@ -20,6 +20,8 @@ export default function Products() {
   const [imagePreview, setImagePreview] = useState('');
   const [saving, setSaving] = useState(false);
   const [shuffling, setShuffling] = useState(false);
+  const [quickSale, setQuickSale] = useState(null); // { id, price, originalPrice }
+  const [savingQuickSale, setSavingQuickSale] = useState(false);
 
   const fetchProducts = () => {
     setLoading(true);
@@ -39,7 +41,7 @@ export default function Products() {
   useEffect(() => { const t = setTimeout(() => { setPage(1); fetchProducts(); }, 300); return () => clearTimeout(t); }, [search]);
 
   const openAdd = () => {
-    setForm({ name: '', category: 'Spirits', subCategory: '', store: 'Liquor Store', volume: '', price: '', originalPrice: '', sku: '', stock: '100', badge: '', description: '', variants: [] });
+    setForm({ name: '', category: 'Spirits', subCategory: '', store: 'Liquor Store', volume: '', price: '', originalPrice: '', sku: '', stock: '100', badge: '', description: '', isTobacco: false, variants: [] });
     setImageFile(null); setImagePreview(''); setModal('add');
   };
 
@@ -68,6 +70,7 @@ export default function Products() {
       formData.set('price', parseFloat(form.price));
       formData.set('originalPrice', parseFloat(form.originalPrice) || 0);
       formData.set('stock', parseInt(form.stock) || 100);
+      formData.set('isTobacco', form.isTobacco ? 'true' : 'false');
       const cleanVariants = (form.variants || [])
         .filter(v => v.label && v.price !== '')
         .map(v => ({ label: v.label.trim(), price: parseFloat(v.price) || 0, originalPrice: parseFloat(v.originalPrice) || 0, stock: parseInt(v.stock) || 0, sku: v.sku || '', store: v.store || '' }));
@@ -85,6 +88,22 @@ export default function Products() {
   const remove = async (id) => {
     if (!window.confirm('Delete this product?')) return;
     try { await axios.delete(`${API}/products/${id}`); fetchProducts(); } catch { alert('Failed'); }
+  };
+
+  // Fast monthly price updates — no need to open the full edit modal just to mark a
+  // product on sale or match this month's in-store price.
+  const openQuickSale = (p) => setQuickSale({ id: p._id, price: String(p.price), originalPrice: p.originalPrice ? String(p.originalPrice) : '' });
+  const saveQuickSale = async () => {
+    if (!quickSale.price) return alert('Price is required');
+    setSavingQuickSale(true);
+    try {
+      const formData = new FormData();
+      formData.set('price', parseFloat(quickSale.price));
+      formData.set('originalPrice', parseFloat(quickSale.originalPrice) || 0);
+      await axios.put(`${API}/products/${quickSale.id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setQuickSale(null); fetchProducts();
+    } catch { alert('Failed to update price'); }
+    setSavingQuickSale(false);
   };
 
   const upd = (k, v) => setForm(p => ({ ...p, [k]: v }));
@@ -138,9 +157,26 @@ export default function Products() {
                     <td style={{ fontSize: 12 }}>{p.category}</td>
                     <td style={{ fontSize: 12, color: 'var(--gray)' }}>{p.subCategory}</td>
                     <td style={{ fontSize: 12 }}>{p.volume}</td>
-                    <td style={{ fontWeight: 700 }}>${(p.price || 0).toFixed(2)}{p.originalPrice > p.price && <div style={{ fontSize: 11, color: 'var(--red)', fontWeight: 700 }}>Save ${(p.originalPrice - p.price).toFixed(2)}</div>}</td>
+                    <td style={{ fontWeight: 700 }}>
+                      {quickSale?.id === p._id ? (
+                        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                          <input className="form-input" type="number" step="0.01" value={quickSale.price} onChange={e => setQuickSale(q => ({ ...q, price: e.target.value }))} placeholder="Price" style={{ width: 70, padding: '4px 6px', fontSize: 12 }} />
+                          <input className="form-input" type="number" step="0.01" value={quickSale.originalPrice} onChange={e => setQuickSale(q => ({ ...q, originalPrice: e.target.value }))} placeholder="Orig." style={{ width: 70, padding: '4px 6px', fontSize: 12 }} />
+                        </div>
+                      ) : (
+                        <>${(p.price || 0).toFixed(2)}{p.originalPrice > p.price && <div style={{ fontSize: 11, color: 'var(--red)', fontWeight: 700 }}>Save ${(p.originalPrice - p.price).toFixed(2)}</div>}</>
+                      )}
+                    </td>
                     <td><span style={{ color: p.stock < 10 ? 'var(--red)' : 'inherit', fontWeight: p.stock < 10 ? 700 : 400 }}>{p.stock}</span></td>
-                    <td><div style={{ display: 'flex', gap: 6 }}>
+                    <td><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {quickSale?.id === p._id ? (
+                        <>
+                          <button className="adm-btn adm-btn-gold" style={{ padding: '4px 10px', fontSize: 12 }} onClick={saveQuickSale} disabled={savingQuickSale}>{savingQuickSale ? '...' : 'Save'}</button>
+                          <button className="adm-btn-outline-s" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setQuickSale(null)}>✕</button>
+                        </>
+                      ) : (
+                        <button className="adm-btn-action" style={{ color: 'var(--red)' }} onClick={() => openQuickSale(p)}>🔥 Sale</button>
+                      )}
                       <button className="adm-btn-action" onClick={() => openEdit(p)}>Edit</button>
                       <button className="adm-btn-danger" onClick={() => remove(p._id)}>Del</button>
                     </div></td>
@@ -194,6 +230,10 @@ export default function Products() {
               <div className="form-row">
                 <div className="form-group"><label className="form-label">Stock</label><input className="form-input" type="number" value={form.stock} onChange={e => upd('stock', e.target.value)} /></div>
                 <div className="form-group"><label className="form-label">SKU</label><input className="form-input" value={form.sku} onChange={e => upd('sku', e.target.value)} placeholder="e.g. DAL-750" /></div>
+              </div>
+              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input type="checkbox" id="isTobacco" checked={!!form.isTobacco} onChange={e => upd('isTobacco', e.target.checked)} style={{ width: 16, height: 16 }} />
+                <label htmlFor="isTobacco" className="form-label" style={{ margin: 0, cursor: 'pointer' }}>Smoke / Tobacco item — blocks cash on delivery, requires advance card payment</label>
               </div>
               <div className="form-group"><label className="form-label">Badge</label><select className="form-input" value={form.badge} onChange={e => upd('badge', e.target.value)}>{BADGES.map(b => <option key={b} value={b}>{b || '— None —'}</option>)}</select></div>
               <div className="form-group"><label className="form-label">Description</label><textarea className="form-input" rows={3} value={form.description} onChange={e => upd('description', e.target.value)} placeholder="Tasting notes, origin, etc." style={{ resize: 'vertical' }} /></div>

@@ -16,7 +16,7 @@ export default function Navbar({ onCartOpen }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const links = [{ to:'/',label:'Home' },{ to:'/products',label:'Alcohol' },{ to:'/grocery',label:'Grocery' },{ to:'/products?cat=Convenience',label:'Convenience' },{ to:'/gifts',label:'Gifts' },{ to:'/tracking',label:'Track Order' }];
+  const links = [{ to:'/',label:'Home' },{ to:'/products',label:'Alcohol' },{ to:'/products?sale=true',label:'🔥 Sale' },{ to:'/grocery',label:'Grocery' },{ to:'/products?cat=Convenience',label:'Convenience' },{ to:'/gifts',label:'Gifts' },{ to:'/tracking',label:'Track Order' }];
 
   const runSearch = (e) => {
     e.preventDefault();
@@ -37,9 +37,9 @@ export default function Navbar({ onCartOpen }) {
           <div style={{position:'relative'}}>
             <button className="btn-icon" onClick={()=>setSearchOpen(!searchOpen)}><SearchIcon/></button>
             {searchOpen && (
-              <form onSubmit={runSearch} style={{position:'absolute',right:0,top:'110%',background:'white',border:'1.5px solid var(--gray-lt)',borderRadius:10,padding:8,zIndex:50,boxShadow:'0 8px 24px rgba(0,0,0,.12)',display:'flex',gap:6,animation:'fadeUp .15s ease'}}>
-                <input autoFocus value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search products..." style={{width:200,padding:'8px 10px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:13,outline:'none'}}/>
-                <button type="submit" style={{padding:'8px 14px',background:'var(--black)',color:'white',border:'none',borderRadius:6,fontSize:12,fontWeight:600,cursor:'pointer'}}>Go</button>
+              <form onSubmit={runSearch} style={{position:'absolute',right:0,top:'110%',background:'white',border:'1.5px solid var(--gray-lt)',borderRadius:10,padding:8,zIndex:50,boxShadow:'0 8px 24px rgba(0,0,0,.12)',display:'flex',gap:6,animation:'fadeUp .15s ease',width:'min(260px, calc(100vw - 32px))',maxWidth:'calc(100vw - 32px)',boxSizing:'border-box'}}>
+                <input autoFocus value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search products..." style={{flex:1,minWidth:0,padding:'8px 10px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:13,outline:'none'}}/>
+                <button type="submit" style={{flexShrink:0,padding:'8px 14px',background:'var(--black)',color:'white',border:'none',borderRadius:6,fontSize:12,fontWeight:600,cursor:'pointer'}}>Go</button>
               </form>
             )}
           </div>

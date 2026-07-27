@@ -3,6 +3,7 @@ const Stripe = require('stripe');
 const ServiceRequest = require('../models/ServiceRequest');
 const { protect, adminOnly } = require('../middleware/auth');
 const { sendMail } = require('../utils/mailer');
+const { markServicePlanPaid } = require('../utils/servicePlanFulfillment');
 
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -196,11 +197,26 @@ router.put('/:id/cancel-subscription', protect, adminOnly, async (req, res) => {
   }
 });
 
-// GET /api/services/track/:requestId - public: check payment/request status after Stripe redirect
+// GET /api/services/track/:requestId - public: check payment/request status after Stripe redirect.
+// Self-heals if the Stripe webhook hasn't landed yet (or never lands, e.g. it isn't registered
+// for this event type) — checks Stripe directly and fires the confirmation emails right here
+// so the customer isn't left without them just because the webhook was late/missing.
 router.get('/track/:requestId', async (req, res) => {
   try {
     const request = await ServiceRequest.findOne({ requestId: req.params.requestId.toUpperCase() });
     if (!request) return res.status(404).json({ success: false, message: 'Request not found' });
+
+    if (request.paymentStatus === 'pending' && request.stripeSessionId && stripe) {
+      try {
+        const session = await stripe.checkout.sessions.retrieve(request.stripeSessionId);
+        if (session.payment_status === 'paid' || session.status === 'complete') {
+          await markServicePlanPaid(request, { customerId: session.customer, subscriptionId: session.subscription });
+        }
+      } catch (stripeErr) {
+        console.error(`[SERVICES] Stripe session check failed for ${request.requestId}:`, stripeErr.message);
+      }
+    }
+
     res.json({ success: true, data: request });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });

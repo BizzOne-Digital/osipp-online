@@ -4,6 +4,7 @@ const Order = require('../models/Order');
 const ServiceRequest = require('../models/ServiceRequest');
 const { buildOrderPayload, commitStock } = require('../utils/orderBuilder');
 const { sendMail } = require('../utils/mailer');
+const { markServicePlanPaid } = require('../utils/servicePlanFulfillment');
 
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -106,20 +107,8 @@ router.post('/webhook', async (req, res) => {
         const request = await ServiceRequest.findOne({ stripeSessionId: obj.id });
         if (!request) {
           console.error(`[STRIPE] Webhook ${event.type}: no service request found for session ${obj.id}`);
-        } else if (request.paymentStatus !== 'paid') {
-          request.paymentStatus = 'paid';
-          request.status = 'confirmed';
-          request.stripeCustomerId = obj.customer || '';
-          if (obj.subscription) {
-            request.stripeSubscriptionId = obj.subscription;
-            request.subscriptionStatus = 'active';
-          }
-          await request.save();
-          console.log(`[STRIPE] Service request ${request.requestId} marked paid`);
-          await sendMail(
-            `Payment Received — Seniors Plan ${request.requestId}`,
-            `<h2>Seniors Plan Payment Confirmed</h2><p><b>Request ID:</b> ${request.requestId}</p><p><b>Plan:</b> ${request.planName} — $${request.planPrice}/month (${request.billingType === 'auto-renew' ? 'Auto-Renew' : 'Pay Monthly'})</p>`
-          );
+        } else {
+          await markServicePlanPaid(request, { customerId: obj.customer, subscriptionId: obj.subscription });
         }
       } else {
         const order = await Order.findOne({ stripeSessionId: obj.id });

@@ -45,7 +45,8 @@ const settingsSchema = new mongoose.Schema({
   cardProcessingFeePercent: { type: Number, default: 3.2 },
   // Driver tip settings.
   tipEnabled: { type: Boolean, default: true },
-  tipPresets: { type: [Number], default: [3, 5, 10] },
+  // Percentages, not dollar amounts, e.g. 10 = 10% of subtotal.
+  tipPresets: { type: [Number], default: [10, 15, 20] },
   deliveryFeeNote: { type: String, default: 'Taxes included' },
   deliveryTime: { type: String, default: '1 hour' },
   ageRequirement: { type: String, default: '19+ ID required at delivery' },

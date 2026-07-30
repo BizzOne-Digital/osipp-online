@@ -8,7 +8,7 @@ const API = process.env.REACT_APP_API_URL || '/api';
 
 export default function CartDrawer({ onClose }) {
   const {
-    items, updateQty, removeItem, subtotal, deliveryFee, deliveryTier, deliveryStops, getTotals, cardFeePercent, hasTobacco, clearCart,
+    items, updateQty, removeItem, subtotal, deliveryFee, deliveryTier, deliveryStops, getTotals, hasTobacco, clearCart,
     discount, coupon, couponError, couponLoading, applyCoupon, removeCoupon,
     tip, setTip, tipEnabled, tipPresets,
     driverInstructions, setDriverInstructions,
@@ -31,6 +31,7 @@ export default function CartDrawer({ onClose }) {
   const [loading, setLoading] = useState(false);
   const [couponInput, setCouponInput] = useState('');
   const [customTip, setCustomTip] = useState('');
+  const [feeInfoOpen, setFeeInfoOpen] = useState(false);
 
   const upd = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -182,7 +183,20 @@ export default function CartDrawer({ onClose }) {
             {addOns.map(a=><div key={a.name} className="order-line"><span>{a.name} x{a.quantity}</span><span>${(a.price*a.quantity).toFixed(2)}</span></div>)}
             {discount>0 && <div className="order-line" style={{color:'var(--green)'}}><span>Coupon ({coupon?.code})</span><span>-${discount.toFixed(2)}</span></div>}
             <div className="order-line"><span>Delivery{deliveryStops.length ? ` · ${deliveryStops.map(d=>d.store).join(', ')}` : ''}</span><span>${deliveryFee.toFixed(2)}</span></div>
-            <div className="order-line"><span>Processing &amp; Handling</span><span>${handlingFee.toFixed(2)}</span></div>
+            <div className="order-line">
+              <span style={{display:'flex',alignItems:'center',gap:5}}>
+                Processing &amp; Handling
+                <span onClick={()=>setFeeInfoOpen(v=>!v)} style={{position:'relative',width:15,height:15,borderRadius:'50%',background:'var(--gold-dk, #b8860b)',color:'white',fontSize:10,fontWeight:800,display:'inline-flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>
+                  i
+                  {feeInfoOpen && (
+                    <span style={{position:'absolute',bottom:'130%',left:0,width:220,background:'var(--black)',color:'white',fontSize:11,fontWeight:400,lineHeight:1.5,padding:'10px 12px',borderRadius:8,zIndex:20,boxShadow:'0 8px 20px rgba(0,0,0,.25)',whiteSpace:'normal'}}>
+                    Unlike many competitors, we maintain transparent product pricing without added markups. As payment processors charge a percentage of the entire transaction—including product costs and delivery fees—a modest service fee is applied to offset these charges and support reliable service.
+                    </span>
+                  )}
+                </span>
+              </span>
+              <span>${handlingFee.toFixed(2)}</span>
+            </div>
             {(parseFloat(tip)||0) > 0 && <div className="order-line"><span>Driver tip</span><span>${(parseFloat(tip)||0).toFixed(2)}</span></div>}
             <div className="order-line-bold"><span>Total</span><span style={{color:'var(--gold-dk)'}}>${total.toFixed(2)}</span></div>
           </div>
@@ -218,7 +232,6 @@ export default function CartDrawer({ onClose }) {
           <div className="payment-options">
             {(hasTobacco ? ['stripe','card'] : ['cash','stripe','card','interac']).map(m=>(<div key={m} className={`pay-opt${payMethod===m?' selected':''}`} onClick={()=>setPayMethod(m)}><div className="pay-opt-name">{m==='cash'?'Cash on Delivery':m==='stripe'?'Pay Online (Card)':m==='card'?'Card (Tap at Door)':'Interac e-Transfer'}</div></div>))}
           </div>
-          {(payMethod==='stripe' || payMethod==='card') && <p style={{fontSize:11,color:'var(--gray)',marginTop:6}}>A {cardFeePercent}% processing fee applies to card/tap payments (included in Processing &amp; Handling above). No fee on cash or e-transfer.</p>}
           <div style={{display:'flex',gap:10,marginTop:12}}><button className="btn-outline" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep('details')}>Back</button><button className="btn-checkout" style={{flex:2}} onClick={placeOrder} disabled={loading}>{loading?(payMethod==='stripe'?'Redirecting...':'Placing...'): payMethod==='stripe'?`Pay $${total.toFixed(2)}`:`Place Order · $${total.toFixed(2)}`}</button></div>
           <p style={{fontSize:11,color:'var(--gray)',textAlign:'center',marginTop:8}}>If your product is not here, please let us know by text or call.</p>
         </div>}

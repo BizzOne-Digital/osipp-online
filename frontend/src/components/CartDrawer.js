@@ -231,6 +231,11 @@ export default function CartDrawer({ onClose }) {
             {(hasTobacco ? ['stripe','card'] : ['cash','stripe','card','interac']).map(m=>(<div key={m} className={`pay-opt${payMethod===m?' selected':''}`} onClick={()=>setPayMethod(m)}><div className="pay-opt-name">{m==='cash'?'Cash on Delivery':m==='stripe'?'Pay Online (Card)':m==='card'?'Card (Tap at Door)':'Interac e-Transfer'}</div></div>))}
           </div>
           <div style={{display:'flex',gap:10,marginTop:12}}><button className="btn-outline" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep('details')}>Back</button><button className="btn-checkout" style={{flex:2}} onClick={placeOrder} disabled={loading}>{loading?(payMethod==='stripe'?'Redirecting...':'Placing...'): payMethod==='stripe'?`Pay $${total.toFixed(2)}`:`Place Order · $${total.toFixed(2)}`}</button></div>
+          {(payMethod==='stripe' || payMethod==='card') && (
+            <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:5,marginTop:10,fontSize:11,color:'var(--gray)'}}>
+              🔒 Secured &amp; Powered by <b style={{color:'var(--black)'}}>Stripe</b>
+            </div>
+          )}
           <p style={{fontSize:11,color:'var(--gray)',textAlign:'center',marginTop:8}}>If your product is not here, please let us know by text or call.</p>
         </div>}
 

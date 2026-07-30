@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { CloseIcon, ArrowIcon, BottleSVG, MinusIcon, PlusIcon } from './Icons';
@@ -66,6 +66,17 @@ export default function CartDrawer({ onClose }) {
   const [tipPercent, setTipPercent] = useState(0);
   const pctToDollars = (pct) => Math.round(subtotal * pct / 100 * 100) / 100;
   const pickTipPercent = (pct) => { setTipPercent(pct); setCustomTip(''); setTip(pctToDollars(pct)); };
+  // Default the tip to 10% (not "No Tip") as soon as we know the subtotal and presets —
+  // only once, so it doesn't override a tip the customer already picked themselves.
+  const defaultTipSet = useRef(false);
+  useEffect(() => {
+    if (!defaultTipSet.current && tipEnabled && subtotal > 0) {
+      defaultTipSet.current = true;
+      const defaultPct = tipPresets.includes(10) ? 10 : (tipPresets[0] || 10);
+      setTipPercent(defaultPct);
+      setTip(Math.round(subtotal * defaultPct / 100 * 100) / 100);
+    }
+  }, [tipEnabled, subtotal, tipPresets, setTip]);
   const onCustomTip = (v) => {
     setCustomTip(v);
     const pct = parseFloat(v) || 0;

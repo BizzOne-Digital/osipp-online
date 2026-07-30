@@ -183,19 +183,17 @@ export default function CartDrawer({ onClose }) {
             {addOns.map(a=><div key={a.name} className="order-line"><span>{a.name} x{a.quantity}</span><span>${(a.price*a.quantity).toFixed(2)}</span></div>)}
             {discount>0 && <div className="order-line" style={{color:'var(--green)'}}><span>Coupon ({coupon?.code})</span><span>-${discount.toFixed(2)}</span></div>}
             <div className="order-line"><span>Delivery{deliveryStops.length ? ` · ${deliveryStops.map(d=>d.store).join(', ')}` : ''}</span><span>${deliveryFee.toFixed(2)}</span></div>
-            <div className="order-line">
+            <div className="order-line" style={{position:'relative'}}>
               <span style={{display:'flex',alignItems:'center',gap:5}}>
                 Processing &amp; Handling
-                <span onClick={()=>setFeeInfoOpen(v=>!v)} style={{position:'relative',width:15,height:15,borderRadius:'50%',background:'var(--gold-dk, #b8860b)',color:'white',fontSize:10,fontWeight:800,display:'inline-flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>
-                  i
-                  {feeInfoOpen && (
-                    <span style={{position:'absolute',bottom:'130%',left:0,width:220,background:'var(--black)',color:'white',fontSize:11,fontWeight:400,lineHeight:1.5,padding:'10px 12px',borderRadius:8,zIndex:20,boxShadow:'0 8px 20px rgba(0,0,0,.25)',whiteSpace:'normal'}}>
-                    Unlike many competitors, we maintain transparent product pricing without added markups. As payment processors charge a percentage of the entire transaction—including product costs and delivery fees—a modest service fee is applied to offset these charges and support reliable service.
-                    </span>
-                  )}
-                </span>
+                <span onClick={()=>setFeeInfoOpen(v=>!v)} style={{width:15,height:15,borderRadius:'50%',background:'var(--gold-dk, #b8860b)',color:'white',fontSize:10,fontWeight:800,display:'inline-flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>i</span>
               </span>
               <span>${handlingFee.toFixed(2)}</span>
+              {feeInfoOpen && (
+                <div style={{position:'absolute',top:'130%',left:0,right:0,background:'var(--black)',color:'white',fontSize:11,fontWeight:400,lineHeight:1.5,padding:'10px 12px',borderRadius:8,zIndex:20,boxShadow:'0 8px 20px rgba(0,0,0,.25)',whiteSpace:'normal',boxSizing:'border-box'}}>
+                  Unlike many competitors, we maintain transparent product pricing without added markups. As payment processors charge a percentage of the entire transaction—including product costs and delivery fees—a modest service fee is applied to offset these charges and support reliable service.
+                </div>
+              )}
             </div>
             {(parseFloat(tip)||0) > 0 && <div className="order-line"><span>Driver tip</span><span>${(parseFloat(tip)||0).toFixed(2)}</span></div>}
             <div className="order-line-bold"><span>Total</span><span style={{color:'var(--gold-dk)'}}>${total.toFixed(2)}</span></div>

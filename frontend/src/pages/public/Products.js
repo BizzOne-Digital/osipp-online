@@ -23,6 +23,13 @@ export default function Products() {
   const [selectedSub, setSelectedSub] = useState(params.get('sub') || '');
   const [onSaleOnly, setOnSaleOnly] = useState(params.get('sale') === 'true');
   const restoredRef = useRef(false);
+  // Captured once at mount — react-router's navType/location.key change to 'REPLACE' and a
+  // new key as soon as the URL-sync effect below calls setParams(), which was re-triggering
+  // the fetch effect a second time mid-flight (a real race condition: two concurrent fetches
+  // for the same page, and whichever response lands last wins — on a slow/mobile connection
+  // this regularly showed "0 products" until the page was manually reloaded).
+  const mountNavType = useRef(navType).current;
+  const historyKey = useRef(location.key).current;
 
   // Reflect the current filter/subcategory/search into the URL (without pushing a new
   // history entry) so that when the customer opens a product and presses Back, this same
@@ -73,9 +80,9 @@ export default function Products() {
   // On a POP navigation (Back button), re-fetch as many pages as were loaded before
   // (tracked in sessionStorage) so "Load More" state is rebuilt, then restore scroll.
   useEffect(() => {
-    if (navType === 'POP' && !restoredRef.current) {
+    if (mountNavType === 'POP' && !restoredRef.current) {
       restoredRef.current = true;
-      const key = `products-pages:${location.key}`;
+      const key = `products-pages:${historyKey}`;
       const savedPages = parseInt(sessionStorage.getItem(key), 10) || 1;
       (async () => {
         setLoading(true);
@@ -92,7 +99,9 @@ export default function Products() {
       setPage(1);
       fetchProducts(1, false);
     }
-  }, [filter, search, selectedSub, navType, location.key, fetchProducts]);
+    // Only re-run when the actual filters change — navType/location.key are intentionally
+    // excluded (see mountNavType/historyKey above) to avoid the double-fetch race.
+  }, [filter, search, selectedSub, onSaleOnly]);
 
   useEffect(() => {
     axios.get(`${API}/products/subcategories?category=${encodeURIComponent(filter)}`)
@@ -103,24 +112,24 @@ export default function Products() {
   // Track how many pages have been loaded (for "Load More") and the scroll position,
   // keyed to this specific history entry so Back restores exactly where the customer left off.
   useEffect(() => {
-    sessionStorage.setItem(`products-pages:${location.key}`, String(page));
-  }, [page, location.key]);
+    sessionStorage.setItem(`products-pages:${historyKey}`, String(page));
+  }, [page, historyKey]);
 
   useEffect(() => {
-    const onScroll = () => sessionStorage.setItem(`products-scroll:${location.key}`, String(window.scrollY));
+    const onScroll = () => sessionStorage.setItem(`products-scroll:${historyKey}`, String(window.scrollY));
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, [location.key]);
+  }, [historyKey]);
 
   useEffect(() => {
-    if (navType === 'POP' && !loading) {
-      const saved = sessionStorage.getItem(`products-scroll:${location.key}`);
+    if (mountNavType === 'POP' && !loading) {
+      const saved = sessionStorage.getItem(`products-scroll:${historyKey}`);
       if (saved) {
         const y = parseInt(saved, 10);
         requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, y)));
       }
     }
-  }, [loading, navType, location.key]);
+  }, [loading, mountNavType, historyKey]);
 
   const loadMore = () => fetchProducts(page + 1, true);
 

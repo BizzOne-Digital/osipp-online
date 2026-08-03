@@ -99,20 +99,39 @@ export function CartProvider({ children }) {
     const val = parseFloat(m[1]);
     return m[2] === 'l' ? val : val / 1000;
   };
-  const distinctStores = [...new Set(items.map(i => i.store).filter(Boolean))];
+  // A stop-requiring add-on (e.g. cigarettes from the Convenience Store) counts as its own
+  // store visit for delivery-tier purposes too, same as a regular product would.
+  const addOnStores = addOns
+    .map(a => (settings?.addOns || []).find(s => s.name === a.name)?.store)
+    .filter(Boolean);
+  const distinctStores = [...new Set([...items.map(i => i.store).filter(Boolean), ...addOnStores])];
   let bottle750Count = 0, largeBottleCount = 0, beer24Count = 0, beer12Count = 0;
   for (const i of items) {
     const label = (i.variantLabel || i.volume || '').toLowerCase();
     if (i.category === 'Beer' || /beer/i.test(i.store || '')) {
-      if (label.includes('24')) beer24Count += i.qty;
+      if (label.includes('24') || label.includes('28')) beer24Count += i.qty;
       else if (label.includes('12')) beer12Count += i.qty;
       continue;
     }
     const liters = parseLiters(label);
     if (liters >= 1.14) largeBottleCount += i.qty; else bottle750Count += i.qty;
   }
+  const singleStore = distinctStores.length === 1 ? distinctStores[0] : null;
   let deliveryTier = 'regular';
-  if (largeBottleCount >= 5 || beer24Count >= 3 || beer12Count >= 8) deliveryTier = 'largeHeavy';
+  // Beer-only order, entirely from the Beer Store, priced by number of 24/28-can cases.
+  if (singleStore === 'Beer Store' && beer24Count > 0 && beer12Count === 0 && bottle750Count === 0 && largeBottleCount === 0) {
+    if (beer24Count <= 2) deliveryTier = 'regular';
+    else if (beer24Count <= 4) deliveryTier = 'multiStop';
+    else if (beer24Count <= 6) deliveryTier = 'alcoholBeer';
+    else deliveryTier = 'largeHeavy';
+  }
+  // 12-pack beer order, entirely from the Liquor Store, priced by number of 12-pack cases.
+  else if (singleStore === 'Liquor Store' && beer12Count > 0 && beer24Count === 0 && bottle750Count === 0 && largeBottleCount === 0) {
+    if (beer12Count <= 2) deliveryTier = 'regular';
+    else if (beer12Count <= 5) deliveryTier = 'multiStop';
+    else deliveryTier = 'alcoholBeer';
+  }
+  else if (largeBottleCount >= 5 || beer24Count >= 3 || beer12Count >= 8) deliveryTier = 'largeHeavy';
   else if (distinctStores.length >= 3) deliveryTier = 'alcoholBeer';
   else if (distinctStores.length >= 2 || bottle750Count >= 5 || beer24Count >= 1) deliveryTier = 'multiStop';
   const deliveryFee = subtotal > 0 ? DELIVERY_TIERS[deliveryTier].delivery : 0;

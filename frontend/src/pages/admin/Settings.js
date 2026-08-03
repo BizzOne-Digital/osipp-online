@@ -30,7 +30,7 @@ export default function Settings() {
   const updStoreFee = (store, v) => setSettings(p => ({ ...p, storeDeliveryFees: { ...p.storeDeliveryFees, [store]: parseFloat(v) || 0 } }));
 
   // Add-ons
-  const addAddOn = () => setSettings(p => ({ ...p, addOns: [...(p.addOns || []), { name: '', price: 0, isActive: true }] }));
+  const addAddOn = () => setSettings(p => ({ ...p, addOns: [...(p.addOns || []), { name: '', price: 0, isActive: true, isTobacco: false, store: '' }] }));
   const updAddOn = (idx, k, v) => setSettings(p => ({ ...p, addOns: p.addOns.map((a, i) => i === idx ? { ...a, [k]: v } : a) }));
   const removeAddOn = (idx) => setSettings(p => ({ ...p, addOns: p.addOns.filter((_, i) => i !== idx) }));
 
@@ -173,12 +173,22 @@ export default function Settings() {
           <div className="adm-table-wrap" style={{ padding: 28 }}>
             <div style={{ fontFamily: 'var(--font-d)', fontSize: 18, fontWeight: 800, marginBottom: 6 }}>Extra Add-on Items</div>
             <div style={{ fontSize: 12, color: 'var(--gray)', marginBottom: 16 }}>Items customers can add at checkout (e.g. pack of smokes, ice, lighter).</div>
+            <div style={{ fontSize: 11, color: 'var(--gray)', marginBottom: 10 }}>Set "Store" if this item requires its own pickup stop (e.g. cigarettes from the Convenience Store) — it'll count toward the delivery tier like a real product would.</div>
             {(settings.addOns || []).map((a, i) => (
-              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
-                <input className="form-input" style={{ flex: 2 }} value={a.name} onChange={e => updAddOn(i, 'name', e.target.value)} placeholder="Item name" />
-                <input className="form-input" style={{ flex: 1 }} type="number" step="0.01" value={a.price} onChange={e => updAddOn(i, 'price', parseFloat(e.target.value) || 0)} placeholder="Price" />
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10, flexWrap: 'wrap' }}>
+                <input className="form-input" style={{ flex: 2, minWidth: 140 }} value={a.name} onChange={e => updAddOn(i, 'name', e.target.value)} placeholder="Item name" />
+                <input className="form-input" style={{ flex: 1, minWidth: 80 }} type="number" step="0.01" value={a.price} onChange={e => updAddOn(i, 'price', parseFloat(e.target.value) || 0)} placeholder="Price" />
+                <select className="form-input" style={{ flex: 1, minWidth: 130 }} value={a.store || ''} onChange={e => updAddOn(i, 'store', e.target.value)}>
+                  <option value="">No extra stop</option>
+                  <option value="Liquor Store">Liquor Store</option>
+                  <option value="Beer Store">Beer Store</option>
+                  <option value="Convenience Store">Convenience Store</option>
+                </select>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, whiteSpace: 'nowrap' }}>
                   <input type="checkbox" checked={a.isActive !== false} onChange={e => updAddOn(i, 'isActive', e.target.checked)} /> Active
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, whiteSpace: 'nowrap' }}>
+                  <input type="checkbox" checked={!!a.isTobacco} onChange={e => updAddOn(i, 'isTobacco', e.target.checked)} /> Tobacco
                 </label>
                 <button className="adm-btn-danger" onClick={() => removeAddOn(i)}>Del</button>
               </div>

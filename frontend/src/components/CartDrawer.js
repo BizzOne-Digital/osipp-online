@@ -71,13 +71,16 @@ export default function CartDrawer({ onClose }) {
   // only once, so it doesn't override a tip the customer already picked themselves.
   const defaultTipSet = useRef(false);
   useEffect(() => {
-    if (!defaultTipSet.current && tipEnabled && subtotal > 0) {
+    // Only default it once the customer actually reaches the payment step — applying it
+    // as soon as the cart opens made the cart-step "Total" silently include a tip the
+    // customer never saw or agreed to yet.
+    if (!defaultTipSet.current && tipEnabled && subtotal > 0 && step === 'payment') {
       defaultTipSet.current = true;
       const defaultPct = tipPresets.includes(10) ? 10 : (tipPresets[0] || 10);
       setTipPercent(defaultPct);
       setTip(Math.round(subtotal * defaultPct / 100 * 100) / 100);
     }
-  }, [tipEnabled, subtotal, tipPresets, setTip]);
+  }, [tipEnabled, subtotal, tipPresets, setTip, step]);
   const onCustomTip = (v) => {
     setCustomTip(v);
     const pct = parseFloat(v) || 0;

@@ -32,12 +32,17 @@ const settingsSchema = new mongoose.Schema({
       isActive: { type: Boolean, default: true },
       // Tobacco/smoke items can't be returned once purchased — these require advance
       // (card/online) payment only; cash on delivery is blocked for these.
-      isTobacco: { type: Boolean, default: false }
+      isTobacco: { type: Boolean, default: false },
+      // Which store this add-on is picked up from, e.g. cigarettes come from the
+      // Convenience Store. Counts toward the delivery-tier stop count like any product —
+      // e.g. adding it to an otherwise Liquor-Store-only order bumps Regular ($13) to
+      // Multi-Stop ($18) because it's now a second stop. Empty = doesn't add a stop.
+      store: { type: String, default: '', enum: ['', 'Beer Store', 'Liquor Store', 'Convenience Store'] }
     }],
     default: [
-      { name: 'Pack of Cigarettes', price: 20, isActive: true, isTobacco: true },
-      { name: 'Lighter', price: 3, isActive: true, isTobacco: false },
-      { name: 'Bag of Ice', price: 5, isActive: true, isTobacco: false }
+      { name: 'Pack of Cigarettes', price: 20, isActive: true, isTobacco: true, store: 'Convenience Store' },
+      { name: 'Lighter', price: 3, isActive: true, isTobacco: false, store: 'Convenience Store' },
+      { name: 'Bag of Ice', price: 5, isActive: true, isTobacco: false, store: 'Convenience Store' }
     ]
   },
   // Card/tap processing surcharge — folded into "Processing & Handling" display,

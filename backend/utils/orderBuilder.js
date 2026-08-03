@@ -34,19 +34,38 @@ function parseLiters(label) {
   return m[2].toLowerCase() === 'l' ? val : val / 1000;
 }
 
-function classifyDeliveryTier(orderItems, storeCount) {
+function classifyDeliveryTier(orderItems, stores) {
+  const storeCount = stores.size;
   let bottle750Count = 0, largeBottleCount = 0, beer24Count = 0, beer12Count = 0;
 
   for (const item of orderItems) {
     const label = (item.variantLabel || item.volume || '').toLowerCase();
     if (item.category === 'Beer' || /beer/i.test(item.store || '')) {
-      if (/24/.test(label)) beer24Count += item.quantity;
+      if (/24|28/.test(label)) beer24Count += item.quantity;
       else if (/12/.test(label)) beer12Count += item.quantity;
       continue;
     }
     const liters = parseLiters(label);
     if (liters >= 1.14) largeBottleCount += item.quantity;
     else bottle750Count += item.quantity;
+  }
+
+  const singleStore = storeCount === 1 ? [...stores][0] : null;
+
+  // Beer-only order, entirely from the Beer Store, priced by number of 24/28-can cases
+  // instead of the generic multi-factor tiers below.
+  if (singleStore === 'Beer Store' && beer24Count > 0 && beer12Count === 0 && bottle750Count === 0 && largeBottleCount === 0) {
+    if (beer24Count <= 2) return 'regular';
+    if (beer24Count <= 4) return 'multiStop';
+    if (beer24Count <= 6) return 'alcoholBeer';
+    return 'largeHeavy';
+  }
+
+  // 12-pack beer order, entirely from the Liquor Store, priced by number of 12-pack cases.
+  if (singleStore === 'Liquor Store' && beer12Count > 0 && beer24Count === 0 && bottle750Count === 0 && largeBottleCount === 0) {
+    if (beer12Count <= 2) return 'regular';
+    if (beer12Count <= 5) return 'multiStop';
+    return 'alcoholBeer';
   }
 
   if (largeBottleCount >= 5 || beer24Count >= 3 || beer12Count >= 8) return 'largeHeavy';
@@ -111,6 +130,9 @@ async function buildOrderPayload({ customer, items, addOns, tip, couponCode, pay
       orderAddOns.push({ name: match.name, price: match.price, quantity: qty });
       addOnsTotal += match.price * qty;
       if (match.isTobacco || looksLikeTobacco(match.name)) hasTobacco = true;
+      // A stop-requiring add-on (e.g. cigarettes from the Convenience Store) counts as its
+      // own store visit for delivery-tier purposes, same as a regular product would.
+      if (match.store) stores.add(match.store);
     }
   }
 
@@ -140,7 +162,7 @@ async function buildOrderPayload({ customer, items, addOns, tip, couponCode, pay
   let handlingFee = 0;
   let deliveryTier = null;
   if (subtotal > 0) {
-    deliveryTier = classifyDeliveryTier(orderItems, stores.size);
+    deliveryTier = classifyDeliveryTier(orderItems, stores);
     deliveryFee = DELIVERY_TIERS[deliveryTier].delivery;
     handlingFee = DELIVERY_TIERS[deliveryTier].handling;
   }

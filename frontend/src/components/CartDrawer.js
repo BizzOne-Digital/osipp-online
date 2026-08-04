@@ -81,11 +81,12 @@ export default function CartDrawer({ onClose }) {
       setTip(Math.round(subtotal * defaultPct / 100 * 100) / 100);
     }
   }, [tipEnabled, subtotal, tipPresets, setTip, step]);
+  // Custom tip is entered as a flat $ amount (unlike the preset buttons, which are %).
   const onCustomTip = (v) => {
     setCustomTip(v);
-    const pct = parseFloat(v) || 0;
-    setTipPercent(pct);
-    setTip(pctToDollars(pct));
+    const dollars = parseFloat(v) || 0;
+    setTipPercent(0);
+    setTip(dollars);
   };
 
   return (
@@ -209,10 +210,11 @@ export default function CartDrawer({ onClose }) {
                 {tipPresets.map(pct=>(
                   <button key={pct} onClick={()=>pickTipPercent(pct)} style={tipBtn(!customTip && tipPercent===pct)}>{pct}%</button>
                 ))}
-                <input value={customTip} onChange={e=>onCustomTip(e.target.value)} type="number" min="0" placeholder="Custom %" style={{width:90,padding:'8px 10px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:16,outline:'none'}}/>
+                <input value={customTip} onChange={e=>onCustomTip(e.target.value)} type="number" min="0" placeholder="Custom $" style={{width:90,padding:'8px 10px',border:'1.5px solid var(--gray-lt)',borderRadius:6,fontSize:16,outline:'none'}}/>
                 <button onClick={()=>pickTipPercent(0)} style={tipBtn(!customTip && tipPercent===0)}>No Tip</button>
               </div>
-              {tipPercent > 0 && <div style={{fontSize:11,color:'var(--gray)',marginTop:6}}>{tipPercent}% = ${(parseFloat(tip)||0).toFixed(2)}</div>}
+              {customTip && (parseFloat(tip)||0) > 0 && <div style={{fontSize:11,color:'var(--gray)',marginTop:6}}>Custom tip: ${(parseFloat(tip)||0).toFixed(2)}</div>}
+              {!customTip && tipPercent > 0 && <div style={{fontSize:11,color:'var(--gray)',marginTop:6}}>{tipPercent}% = ${(parseFloat(tip)||0).toFixed(2)}</div>}
             </div>
           )}
 

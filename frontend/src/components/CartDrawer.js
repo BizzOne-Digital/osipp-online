@@ -20,11 +20,20 @@ export default function CartDrawer({ onClose }) {
   const [form, setForm] = useState({ name: user?.name||'', phone: user?.phone||'', email: user?.email||'', address: user?.address||'', city: user?.city||'Mississauga', postalCode: user?.postalCode||'' });
   // Tobacco/smoke orders can't be paid cash on delivery — default them straight to card.
   const [payMethod, setPayMethod] = useState(hasTobacco ? 'stripe' : 'cash');
-  // Cart contents (and hasTobacco) can change after this component already mounted —
-  // e.g. a tobacco item added while the drawer is open — so re-sync away from cash/interac
-  // whenever that happens, instead of leaving the initial useState value stuck.
+  // Tracks whether the CURRENT payMethod was auto-forced by us (tobacco in cart) rather
+  // than chosen by the customer — so we know it's safe to auto-revert it back to cash
+  // once the tobacco item is removed, instead of leaving the card fee stuck on the total
+  // forever (this was the "processing fee doesn't go back down" bug).
+  const autoForcedPayMethod = useRef(hasTobacco);
+  const choosePayMethod = (m) => { autoForcedPayMethod.current = false; setPayMethod(m); };
   useEffect(() => {
-    if (hasTobacco && !['stripe', 'card'].includes(payMethod)) setPayMethod('stripe');
+    if (hasTobacco && !['stripe', 'card'].includes(payMethod)) {
+      autoForcedPayMethod.current = true;
+      setPayMethod('stripe');
+    } else if (!hasTobacco && autoForcedPayMethod.current) {
+      autoForcedPayMethod.current = false;
+      setPayMethod('cash');
+    }
   }, [hasTobacco, payMethod]);
   const { handlingFee, total } = getTotals(payMethod);
   const [orderId, setOrderId] = useState('');
@@ -239,7 +248,7 @@ export default function CartDrawer({ onClose }) {
           <div className="form-label" style={{marginBottom:6}}>Payment Method</div>
           {hasTobacco && <p style={{fontSize:12,color:'var(--red, #b91c1c)',marginBottom:8}}>Your order includes a smoke/tobacco item — advance payment by card is required (no cash, no e-transfer), as it can't be returned once purchased.</p>}
           <div className="payment-options">
-            {(hasTobacco ? ['stripe','card'] : ['cash','stripe','card','interac']).map(m=>(<div key={m} className={`pay-opt${payMethod===m?' selected':''}`} onClick={()=>setPayMethod(m)}><div className="pay-opt-name">{m==='cash'?'Cash on Delivery':m==='stripe'?'Pay Online (Card)':m==='card'?'Card (Tap at Door)':'Interac e-Transfer'}</div></div>))}
+            {(hasTobacco ? ['stripe','card'] : ['cash','stripe','card','interac']).map(m=>(<div key={m} className={`pay-opt${payMethod===m?' selected':''}`} onClick={()=>choosePayMethod(m)}><div className="pay-opt-name">{m==='cash'?'Cash on Delivery':m==='stripe'?'Pay Online (Card)':m==='card'?'Card (Tap at Door)':'Interac e-Transfer'}</div></div>))}
           </div>
           <div style={{display:'flex',gap:10,marginTop:12}}><button className="btn-outline" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep('details')}>Back</button><button className="btn-checkout" style={{flex:2}} onClick={placeOrder} disabled={loading}>{loading?(payMethod==='stripe'?'Redirecting...':'Placing...'): payMethod==='stripe'?`Pay $${total.toFixed(2)}`:`Place Order · $${total.toFixed(2)}`}</button></div>
           {(payMethod==='stripe' || payMethod==='card') && (

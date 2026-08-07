@@ -30,6 +30,7 @@ import AdminLogin from './pages/admin/Login';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminOrders from './pages/admin/Orders';
 import AdminProducts from './pages/admin/Products';
+import AdminCoupons from './pages/admin/Coupons';
 import AdminCustomers from './pages/admin/Customers';
 import AdminServices from './pages/admin/Services';
 import AdminSettings from './pages/admin/Settings';
@@ -110,6 +111,7 @@ export default function App() {
           <Route path="/admin" element={<PrivateRoute><AdminLayout><AdminDashboard /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/orders" element={<PrivateRoute><AdminLayout><AdminOrders /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/products" element={<PrivateRoute><AdminLayout><AdminProducts /></AdminLayout></PrivateRoute>} />
+          <Route path="/admin/coupons" element={<PrivateRoute><AdminLayout><AdminCoupons /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/customers" element={<PrivateRoute><AdminLayout><AdminCustomers /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/services" element={<PrivateRoute><AdminLayout><AdminServices /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/settings" element={<PrivateRoute><AdminLayout><AdminSettings /></AdminLayout></PrivateRoute>} />

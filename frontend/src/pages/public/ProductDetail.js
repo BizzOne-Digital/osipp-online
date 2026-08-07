@@ -8,6 +8,25 @@ import { PlusIcon, MinusIcon, CheckIcon, ArrowIcon, BottleSVG, TruckIcon, Shield
 
 const API = process.env.REACT_APP_API_URL || '/api';
 
+// Maps the raw admin `category` (+ subCategory, for Spirits) to the simplified top-level
+// shopping group used by the Products page filters (see TOP_GROUPS there).
+const SUBCAT_TO_GROUP = {
+  'Canadian Whisky': 'Whisky', 'Irish Whisky': 'Whisky', 'Scotch Whisky': 'Whisky', 'Japanese & International Whisky': 'Whisky',
+  'Vodka': 'Vodka', 'Flavoured Vodka': 'Vodka',
+  'Tequila Blanco': 'Tequila', 'Tequila Reposado': 'Tequila', 'Tequila Anejo': 'Tequila',
+  'Dark Rum': 'Rum', 'White Rum': 'Rum',
+  'Gin': 'Gin', 'Flavoured Gin': 'Gin',
+  'Liqueurs': 'Liqueurs',
+  'Champagne': 'Champagne', 'Sparkling': 'Champagne',
+  'Non-Alcoholic': 'NonAlcoholic'
+};
+const categoryGroupKey = (category, subCategory) => {
+  if (SUBCAT_TO_GROUP[subCategory]) return SUBCAT_TO_GROUP[subCategory];
+  if (category === 'Ready To Drink') return 'Coolers';
+  if (category === 'Spirits') return 'More';
+  return category; // Beer / Wine / Convenience match a top group key directly
+};
+
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -78,7 +97,7 @@ export default function ProductDetail() {
         {/* Breadcrumb */}
         <div style={{ fontSize: 13, color: 'var(--gray)', marginBottom: 20, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <Link to="/" style={{ color: 'var(--gray)', textDecoration: 'none' }}>Home</Link><span>/</span>
-          <Link to={`/products?cat=${product.category}`} style={{ color: 'var(--gray)', textDecoration: 'none' }}>{product.category}</Link><span>/</span>
+          <Link to={`/products?cat=${categoryGroupKey(product.category, product.subCategory)}`} style={{ color: 'var(--gray)', textDecoration: 'none' }}>{product.category}</Link><span>/</span>
           <span style={{ color: 'var(--black)', fontWeight: 600 }}>{product.name}</span>
         </div>
 

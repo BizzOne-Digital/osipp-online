@@ -56,10 +56,10 @@ export default function Home() {
   const [catImgs, setCatImgs] = useState({});
 
   const cats = [
-    { label: 'Beer', cls: 'beer', img: process.env.PUBLIC_URL + '/images/beer.png', fallback: <CatBeer />, sub: 'Lagers, Ales, Stouts & Craft', store: 'Beer Store' },
-    { label: 'Spirits', cls: 'spirits',img: process.env.PUBLIC_URL + '/images/wh.png', fallback: <CatSpirits />, sub: 'Whiskey, Vodka, Rum, Gin', store: 'Liquor Store' },
-    { label: 'Wine', cls: 'wine',img: process.env.PUBLIC_URL + '/images/wine.png', fallback: <CatWine />, sub: 'Red, White, Rosé, Champagne', store: 'Liquor Store' },
-    { label: 'Convenience', cls: 'store', img: process.env.PUBLIC_URL + '/images/4th.png',fallback: <CatStore />, sub: 'Snacks, Mixers, Ice, Cups', store: 'Convenience Store' },
+    { label: 'Beer', to: '/products?cat=Beer', cls: 'beer', img: process.env.PUBLIC_URL + '/images/beer.png', fallback: <CatBeer />, sub: 'Lagers, Ales, Stouts & Craft', store: 'Beer Store' },
+    { label: 'Spirits', to: '/products?cat=Whisky', cls: 'spirits',img: process.env.PUBLIC_URL + '/images/wh.png', fallback: <CatSpirits />, sub: 'Whiskey, Vodka, Rum, Gin', store: 'Liquor Store' },
+    { label: 'Wine', to: '/products?cat=Wine', cls: 'wine',img: process.env.PUBLIC_URL + '/images/wine.png', fallback: <CatWine />, sub: 'Red, White, Rosé, Champagne', store: 'Liquor Store' },
+    { label: 'Convenience', to: '/products?cat=Convenience', cls: 'store', img: process.env.PUBLIC_URL + '/images/4th.png',fallback: <CatStore />, sub: 'Snacks, Mixers, Ice, Cups', store: 'Convenience Store' },
   ];
 
   useEffect(() => {
@@ -204,7 +204,7 @@ export default function Home() {
           </div>
           <div className="cat-grid">
             {cats.map(c => (
-              <Link key={c.label} to={`/products?cat=${c.label}`} className={`cat-card ${c.cls}`}>
+              <Link key={c.label} to={c.to} className={`cat-card ${c.cls}`}>
                 <div className="cat-img">
                   {c.img ? <img src={c.img} alt={c.label} loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
                     : catImgs[c.label] ? <img src={catImgs[c.label]} alt={c.label} loading="lazy" />

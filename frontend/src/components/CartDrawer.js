@@ -164,6 +164,9 @@ export default function CartDrawer({ onClose }) {
             <div className="cart-subtotal"><span>Delivery{deliveryStops.length ? ` · ${deliveryStops.map(d=>d.store).join(', ')}` : ''}</span><span>${deliveryFee.toFixed(2)}</span></div>
             <div className="cart-subtotal"><span>Processing &amp; Handling</span><span>${handlingFee.toFixed(2)}</span></div>
             <div className="cart-total"><span className="cart-total-lbl">Total</span><span className="cart-total-val">${total.toFixed(2)}</span></div>
+            <div style={{background:'var(--cream)',border:'1px solid var(--gold)',borderRadius:8,padding:'8px 12px',marginTop:10,marginBottom:10,fontSize:12.5,textAlign:'center'}}>
+              🎁 You're getting a <b style={{textTransform:'uppercase'}}>FREE</b> Cooler Can with this order!
+            </div>
             <button className="btn-checkout" onClick={()=>setStep('details')}>Checkout <ArrowIcon/></button>
           </div>}
         </>}
@@ -201,6 +204,9 @@ export default function CartDrawer({ onClose }) {
             </div>
             {(parseFloat(tip)||0) > 0 && <div className="order-line"><span>Driver tip</span><span>${(parseFloat(tip)||0).toFixed(2)}</span></div>}
             <div className="order-line-bold"><span>Total</span><span style={{color:'var(--gold-dk)'}}>${total.toFixed(2)}</span></div>
+          </div>
+          <div style={{background:'var(--cream)',border:'1px solid var(--gold)',borderRadius:8,padding:'8px 12px',marginBottom:14,fontSize:12.5,textAlign:'center'}}>
+            🎁 You're getting a <b style={{textTransform:'uppercase'}}>FREE</b> Cooler Can with this order!
           </div>
 
           {tipEnabled && (

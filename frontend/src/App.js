@@ -8,6 +8,8 @@ import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import Toast from './components/Toast';
 import AdminSidebar from './components/AdminSidebar';
+import PromoBanner from './components/PromoBanner';
+import WelcomePopup from './components/WelcomePopup';
 
 import Home from './pages/public/Home';
 import Products from './pages/public/Products';
@@ -78,7 +80,9 @@ export default function App() {
       <ScrollToTop />
       {!isAdmin && (
         <>
+          <PromoBanner />
           <Navbar onCartOpen={openCart} />
+          <WelcomePopup />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />

@@ -18,7 +18,7 @@ export default function Footer() {
           <div>
             <div className="footer-col-title">Shop</div>
             <Link to="/products?cat=Beer" className="footer-link">Beer</Link>
-            <Link to="/products?cat=Spirits" className="footer-link">Spirits</Link>
+            <Link to="/products?cat=Whisky" className="footer-link">Spirits</Link>
             <Link to="/products?cat=Wine" className="footer-link">Wine</Link>
             <Link to="/products?cat=Convenience" className="footer-link">Convenience</Link>
           </div>

@@ -11,6 +11,9 @@ const couponSchema = new mongoose.Schema({
   usedCount: { type: Number, default: 0 },
   perUserLimit: { type: Number, default: 1 },
   usedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  // Tracks redemptions by phone number too, since most orders are placed as a guest
+  // (no account) — this is what actually enforces "first order only" for guests.
+  usedByPhone: { type: [String], default: [] },
   isActive: { type: Boolean, default: true },
   startDate: { type: Date, default: Date.now },
   endDate: { type: Date, default: null },

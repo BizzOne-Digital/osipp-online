@@ -163,8 +163,16 @@ async function buildOrderPayload({ customer, items, addOns, tip, couponCode, pay
   let discount = 0;
   let couponApplied = '';
   let couponDoc = null;
+  const normalizePhone = (p) => String(p || '').replace(/\D/g, '');
   if (couponCode) {
     const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
+    if (coupon && coupon.perUserLimit) {
+      const phone = normalizePhone(customer.phone);
+      const priorUses = coupon.usedByPhone.filter(p => p === phone).length;
+      if (phone && priorUses >= coupon.perUserLimit) {
+        const e = new Error(`Coupon "${coupon.code}" has already been used on this phone number`); e.status = 400; throw e;
+      }
+    }
     if (coupon && subtotal >= coupon.minOrder) {
       if (coupon.type === 'free_delivery') {
         discount = r2(deliveryFee + handlingFee);

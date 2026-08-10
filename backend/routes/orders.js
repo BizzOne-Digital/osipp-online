@@ -19,6 +19,8 @@ router.post('/', async (req, res) => {
     if (couponDoc) {
       couponDoc.usedCount += 1;
       if (req.user) couponDoc.usedBy.push(req.user._id);
+      const phone = String(customer.phone || '').replace(/\D/g, '');
+      if (phone) couponDoc.usedByPhone.push(phone);
       await couponDoc.save();
     }
 

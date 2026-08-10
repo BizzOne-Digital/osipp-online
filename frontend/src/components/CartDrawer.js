@@ -174,7 +174,7 @@ export default function CartDrawer({ onClose }) {
             <div className="cart-subtotal"><span>Processing &amp; Handling</span><span>${handlingFee.toFixed(2)}</span></div>
             <div className="cart-total"><span className="cart-total-lbl">Total</span><span className="cart-total-val">${total.toFixed(2)}</span></div>
             <div style={{background:'var(--cream)',border:'1px solid var(--gold)',borderRadius:8,padding:'8px 12px',marginTop:10,marginBottom:10,fontSize:12.5,textAlign:'center'}}>
-              🎁 You're getting a <b style={{textTransform:'uppercase'}}>FREE</b> Cooler Can with this order!
+              🎁 Use code <b>OSIPPFREE</b> for <b style={{textTransform:'uppercase'}}>FREE</b> delivery on your first order — plus you're getting a <b style={{textTransform:'uppercase'}}>FREE</b> Cooler Can with this order!
             </div>
             <button className="btn-checkout" onClick={()=>setStep('details')}>Checkout <ArrowIcon/></button>
           </div>}

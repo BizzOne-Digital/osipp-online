@@ -19,12 +19,13 @@ const TOP_GROUPS = [
   { key: 'Tequila', label: 'Tequila', category: 'Spirits', subCategories: ['Tequila Blanco', 'Tequila Reposado', 'Tequila Anejo'] },
   { key: 'Rum', label: 'Rum', category: 'Spirits', subCategories: ['Dark Rum', 'White Rum'] },
   { key: 'Gin', label: 'Gin', category: 'Spirits', subCategories: ['Gin', 'Flavoured Gin'] },
+  { key: 'Brandy', label: 'Brandy', category: 'Spirits', subCategories: ['Brandy', 'Cognac'] },
   { key: 'Wine', label: 'Wine', category: 'Wine', subCategories: ['Red Wine - Argentina', 'Red Wine - Australia', 'Red Wine - Chile', 'Red Wine - France', 'Red Wine - Italy', 'Red Wine - New Zealand', 'Red Wine - Portugal', 'Red Wine - Spain', 'White Wine - Argentina', 'White Wine - Australia', 'White Wine - Chile', 'White Wine - France', 'White Wine - Italy', 'White Wine - New Zealand', 'White Wine - Portugal', 'Rose', 'VQA Red', 'VQA White', 'Ontario Red', 'Ontario White', 'Fortified', 'Vintage'] },
   { key: 'Coolers', label: 'Coolers', category: 'Ready To Drink', subCategories: ['Coolers', 'Cider', 'Seltzers', 'Cocktails', 'Premixed Cocktails', 'Caesars', 'Teas'] },
   { key: 'Champagne', label: 'Champagne', category: 'Wine', subCategories: ['Champagne', 'Sparkling'] },
   { key: 'Liqueurs', label: 'Liqueurs', category: 'Spirits', subCategories: ['Liqueurs'] },
+  { key: 'SojuSake', label: 'Soju & Sake', category: 'Spirits', subCategories: ['Soju & Sake'] },
   { key: 'NonAlcoholic', label: 'Non-Alcoholic', category: 'Beer', subCategories: ['Non-Alcoholic'] },
-  { key: 'More', label: 'More Spirits', category: 'Spirits', subCategories: ['Brandy', 'Cognac', 'Ontario Craft Spirit', 'Soju & Sake'] },
   { key: 'Convenience', label: 'Convenience', category: 'Convenience', subCategories: ['Cigarettes', 'Drinks & Snacks'] }
 ];
 const groupOf = (key) => TOP_GROUPS.find(g => g.key === key) || TOP_GROUPS[0];
@@ -164,9 +165,10 @@ export default function Products() {
         </div>
 
         <div className="prod-filters" style={{ marginBottom: 16 }}>
-          {TOP_GROUPS.map(g => <button key={g.key} className={`filter-btn${filter === g.key ? ' active' : ''}`} onClick={() => { setFilter(g.key); setSelectedSub(''); }}>{g.label}</button>)}
-          <button className={`filter-btn${onSaleOnly ? ' active' : ''}`} style={onSaleOnly ? { background: 'var(--red)', color: 'white', borderColor: 'var(--red)' } : { color: 'var(--red)', borderColor: 'var(--red)' }} onClick={() => setOnSaleOnly(v => !v)}>🔥 On Sale</button>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--black)', color: 'white', padding: '8px 14px', borderRadius: 99, fontSize: 12, fontWeight: 700 }}>🎁 WELCOME10 + <span style={{ color: 'var(--gold)' }}>FREE</span> Cooler Can</span>
+          <button className={`filter-btn${filter === 'All' ? ' active' : ''}`} onClick={() => { setFilter('All'); setSelectedSub(''); }}>All</button>
+          <button className={`filter-btn${onSaleOnly ? ' active' : ''}`} style={onSaleOnly ? { background: 'var(--red)', color: 'white', borderColor: 'var(--red)' } : { color: 'var(--red)', borderColor: 'var(--red)' }} onClick={() => setOnSaleOnly(v => !v)}>🔥 Sale</button>
+          {TOP_GROUPS.filter(g => g.key !== 'All').map(g => <button key={g.key} className={`filter-btn${filter === g.key ? ' active' : ''}`} onClick={() => { setFilter(g.key); setSelectedSub(''); }}>{g.label}</button>)}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--black)', color: 'white', padding: '8px 14px', borderRadius: 99, fontSize: 12, fontWeight: 700 }}>🎁 OSIPPFREE — <span style={{ color: 'var(--gold)' }}>FREE</span> Delivery + <span style={{ color: 'var(--gold)' }}>FREE</span> Cooler Can</span>
         </div>
 
         {group.subCategories && (

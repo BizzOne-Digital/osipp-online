@@ -17,11 +17,12 @@ try {
 // GET /api/products - public
 router.get('/', async (req, res) => {
   try {
-    const { category, store, search, badge, subCategory, subCategories, onSale, page = 1, limit = 100, sort = '-createdAt', minPrice, maxPrice } = req.query;
+    const { category, store, search, badge, subCategory, subCategories, onSale, trending, page = 1, limit = 100, sort = '-createdAt', minPrice, maxPrice } = req.query;
     const filter = { isActive: true };
     if (category && category !== 'All') filter.category = category;
     if (store) filter.store = store;
     if (badge) filter.badge = badge;
+    if (trending === 'true') filter.isTrending = true;
     if (subCategory) filter.subCategory = subCategory;
     // Comma-separated list — used by the top-level category groups (e.g. "Whisky" spans
     // Canadian/Irish/Scotch/Japanese Whisky) to pull every matching subCategory at once.

@@ -35,6 +35,9 @@ const productSchema = new mongoose.Schema({
   // Smoke/tobacco products can't be returned once purchased — orders containing one require
   // advance card payment only, no cash on delivery.
   isTobacco: { type: Boolean, default: false },
+  // Admin-curated "Trending" flag — independent of the `badge` field — shown in its own
+  // Home page section so admin can hand-pick what's trending without touching badges/sale.
+  isTrending: { type: Boolean, default: false },
   // Optional size options. If empty, the base `price` is used (backward compatible).
   variants: { type: [variantSchema], default: [] },
   // Controls display order on the public site. Admin can hit "Shuffle Products" to randomize

@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
 const couponSchema = new mongoose.Schema({
   code: { type: String, required: true, unique: true, uppercase: true, trim: true },
-  type: { type: String, enum: ['percentage', 'fixed'], required: true },
-  value: { type: Number, required: true, min: 0 },
+  // 'free_delivery' waives the delivery + processing/handling fee entirely instead of
+  // discounting the product subtotal — `value` is unused for this type.
+  type: { type: String, enum: ['percentage', 'fixed', 'free_delivery'], required: true },
+  value: { type: Number, required: function () { return this.type !== 'free_delivery'; }, min: 0, default: 0 },
   minOrder: { type: Number, default: 0 },
   maxDiscount: { type: Number, default: null },
   usageLimit: { type: Number, default: null },

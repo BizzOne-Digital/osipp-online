@@ -66,15 +66,6 @@ export function CartProvider({ children }) {
     setAddOns(prev => prev.map(a => a.name === name ? { ...a, quantity: a.quantity + delta } : a).filter(a => a.quantity > 0));
   }, []);
 
-  const applyCoupon = useCallback(async (code) => {
-    setCouponLoading(true); setCouponError('');
-    try {
-      const st = items.reduce((s, i) => s + i.price * i.qty, 0);
-      const res = await axios.post(`${API}/coupons/validate`, { code, subtotal: st });
-      setCoupon(res.data.data); setCouponLoading(false); return true;
-    } catch (err) { setCouponError(err.response?.data?.message || 'Invalid code'); setCoupon(null); setCouponLoading(false); return false; }
-  }, [items]);
-
   const removeCoupon = useCallback(() => { setCoupon(null); setCouponError(''); }, []);
 
   // ── Totals ──
@@ -137,6 +128,17 @@ export function CartProvider({ children }) {
   const deliveryFee = subtotal > 0 ? DELIVERY_TIERS[deliveryTier].delivery : 0;
   const baseHandlingFee = subtotal > 0 ? DELIVERY_TIERS[deliveryTier].handling : 0;
   const deliveryStops = distinctStores.map(store => ({ store, fee: null }));
+
+  // A 'free_delivery' coupon's discount amount depends on the delivery/handling fee, so
+  // this must come after those are computed above.
+  const applyCoupon = useCallback(async (code) => {
+    setCouponLoading(true); setCouponError('');
+    try {
+      const st = items.reduce((s, i) => s + i.price * i.qty, 0);
+      const res = await axios.post(`${API}/coupons/validate`, { code, subtotal: st, deliveryFee, handlingFee: baseHandlingFee });
+      setCoupon(res.data.data); setCouponLoading(false); return true;
+    } catch (err) { setCouponError(err.response?.data?.message || 'Invalid code'); setCoupon(null); setCouponLoading(false); return false; }
+  }, [items, deliveryFee, baseHandlingFee]);
 
   // Safety net: catches smoke/tobacco items by name even if the admin forgot to tick the
   // "Tobacco" checkbox on that specific product/add-on — mirrors backend/utils/orderBuilder.js.

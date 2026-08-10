@@ -144,20 +144,6 @@ async function buildOrderPayload({ customer, items, addOns, tip, couponCode, pay
 
   subtotal = r2(subtotal + addOnsTotal);
 
-  let discount = 0;
-  let couponApplied = '';
-  let couponDoc = null;
-  if (couponCode) {
-    const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
-    if (coupon && subtotal >= coupon.minOrder) {
-      discount = coupon.type === 'percentage' ? (subtotal * coupon.value / 100) : coupon.value;
-      if (coupon.maxDiscount && discount > coupon.maxDiscount) discount = coupon.maxDiscount;
-      discount = r2(discount);
-      couponApplied = coupon.code;
-      couponDoc = coupon;
-    }
-  }
-
   let deliveryFee = 0;
   let handlingFee = 0;
   let deliveryTier = null;
@@ -171,6 +157,26 @@ async function buildOrderPayload({ customer, items, addOns, tip, couponCode, pay
 
   let tipAmount = Math.max(0, parseFloat(tip) || 0);
   tipAmount = r2(tipAmount);
+
+  // Coupon discount — computed after delivery/handling are known, since a 'free_delivery'
+  // coupon waives exactly those fees rather than discounting the product subtotal.
+  let discount = 0;
+  let couponApplied = '';
+  let couponDoc = null;
+  if (couponCode) {
+    const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
+    if (coupon && subtotal >= coupon.minOrder) {
+      if (coupon.type === 'free_delivery') {
+        discount = r2(deliveryFee + handlingFee);
+      } else {
+        discount = coupon.type === 'percentage' ? (subtotal * coupon.value / 100) : coupon.value;
+        if (coupon.maxDiscount && discount > coupon.maxDiscount) discount = coupon.maxDiscount;
+        discount = r2(discount);
+      }
+      couponApplied = coupon.code;
+      couponDoc = coupon;
+    }
+  }
 
   // 3.2% processing surcharge on card/online/tap payments only — folded directly into
   // the "Processing & Handling" number shown to the customer (no separate line).

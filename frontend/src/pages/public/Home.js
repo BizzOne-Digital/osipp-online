@@ -51,6 +51,7 @@ const CatStore = () => (
 export default function Home() {
   const navigate = useNavigate();
   const [featured, setFeatured] = useState([]);
+  const [trending, setTrending] = useState([]);
   const [promotions, setPromotions] = useState([]);
   const [search, setSearch] = useState('');
   const [catImgs, setCatImgs] = useState({});
@@ -64,6 +65,7 @@ export default function Home() {
 
   useEffect(() => {
     axios.get(`${API}/products?limit=8&badge=Popular`).then(r => setFeatured(shuffle(r.data.data))).catch(() => {});
+    axios.get(`${API}/products?limit=8&trending=true`).then(r => setTrending(r.data.data || [])).catch(() => {});
     axios.get(`${API}/promotions?active=true`).then(r => setPromotions(r.data.data || [])).catch(() => {});
     // Pull one representative product image per category for the floating category cards
     ['Beer', 'Spirits', 'Wine', 'Convenience'].forEach(cat => {
@@ -147,6 +149,26 @@ export default function Home() {
               onKeyDown={e => e.key === 'Enter' && navigate(`/products?search=${search}`)} />
             <button className="btn-search" onClick={() => navigate(`/products?search=${search}`)}><SearchIcon /> Search</button>
           </div>
+        </div>
+      </div>
+
+      {/* ── Quick Category Bar ── */}
+      <div className="container" style={{ padding: '20px 24px 0' }}>
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6 }}>
+          <Link to="/products" className="filter-btn" style={{ textDecoration: 'none', flexShrink: 0 }}>All</Link>
+          <Link to="/products?sale=true" className="filter-btn" style={{ textDecoration: 'none', flexShrink: 0, color: 'var(--red)', borderColor: 'var(--red)' }}>🔥 Sale</Link>
+          {[
+            { key: 'Beer', label: 'Beer' }, { key: 'Whisky', label: 'Whisky' }, { key: 'Vodka', label: 'Vodka' },
+            { key: 'Tequila', label: 'Tequila' }, { key: 'Rum', label: 'Rum' }, { key: 'Gin', label: 'Gin' },
+            { key: 'Brandy', label: 'Brandy' }, { key: 'Wine', label: 'Wine' }, { key: 'Champagne', label: 'Champagne' },
+            { key: 'Liqueurs', label: 'Liqueurs' }, { key: 'SojuSake', label: 'Soju & Sake' },
+            { key: 'NonAlcoholic', label: 'Non-Alcoholic' }, { key: 'Convenience', label: 'Convenience' }
+          ].map(g => (
+            <Link key={g.key} to={`/products?cat=${g.key}`} className="filter-btn" style={{ textDecoration: 'none', flexShrink: 0 }}>{g.label}</Link>
+          ))}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--black)', color: 'white', padding: '8px 14px', borderRadius: 99, fontSize: 12, fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap' }}>
+            🎁 OSIPPFREE — <span style={{ color: 'var(--gold)' }}>FREE</span> Delivery + <span style={{ color: 'var(--gold)' }}>FREE</span> Cooler Can
+          </span>
         </div>
       </div>
 
@@ -234,6 +256,24 @@ export default function Home() {
             </div>
             <div className="prod-grid">
               {featured.slice(0, 8).map(p => <ProductCard key={p._id} product={p} />)}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Trending Now (admin-curated) ── */}
+      {trending.length > 0 && (
+        <div className="section" style={{ paddingTop: 0 }}>
+          <div className="container">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 28 }}>
+              <div>
+                <div className="section-title">🔥 Trending Now</div>
+                <div className="section-sub">Hand-picked by our team</div>
+              </div>
+              <Link to="/products" className="btn-outline">View All <ArrowIcon /></Link>
+            </div>
+            <div className="prod-grid">
+              {trending.slice(0, 8).map(p => <ProductCard key={p._id} product={p} />)}
             </div>
           </div>
         </div>

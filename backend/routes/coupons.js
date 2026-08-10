@@ -5,7 +5,7 @@ const { protect, adminOnly } = require('../middleware/auth');
 // POST /api/coupons/validate - public
 router.post('/validate', async (req, res) => {
   try {
-    const { code, subtotal, userId } = req.body;
+    const { code, subtotal, userId, deliveryFee, handlingFee } = req.body;
     const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
     if (!coupon) return res.status(404).json({ success: false, message: 'Invalid coupon code' });
     if (coupon.endDate && new Date() > coupon.endDate) return res.status(400).json({ success: false, message: 'Coupon expired' });
@@ -15,8 +15,13 @@ router.post('/validate', async (req, res) => {
       const userUses = coupon.usedBy.filter(u => u.toString() === userId).length;
       if (userUses >= coupon.perUserLimit) return res.status(400).json({ success: false, message: 'You already used this coupon' });
     }
-    let discount = coupon.type === 'percentage' ? (subtotal * coupon.value / 100) : coupon.value;
-    if (coupon.maxDiscount && discount > coupon.maxDiscount) discount = coupon.maxDiscount;
+    let discount;
+    if (coupon.type === 'free_delivery') {
+      discount = (parseFloat(deliveryFee) || 0) + (parseFloat(handlingFee) || 0);
+    } else {
+      discount = coupon.type === 'percentage' ? (subtotal * coupon.value / 100) : coupon.value;
+      if (coupon.maxDiscount && discount > coupon.maxDiscount) discount = coupon.maxDiscount;
+    }
     res.json({ success: true, data: { code: coupon.code, type: coupon.type, value: coupon.value, discount: Math.round(discount * 100) / 100, description: coupon.description } });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });

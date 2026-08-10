@@ -108,6 +108,16 @@ export default function Products() {
 
   const upd = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
+  // One-click toggle — lets admin hand-curate the Home page "Trending" section themselves.
+  const toggleTrending = async (p) => {
+    try {
+      const formData = new FormData();
+      formData.set('isTrending', p.isTrending ? 'false' : 'true');
+      await axios.put(`${API}/products/${p._id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      fetchProducts();
+    } catch { alert('Failed to update'); }
+  };
+
   const shuffleProducts = async () => {
     const label = filter === 'All' ? 'all products' : `all ${filter} products`;
     if (!window.confirm(`Shuffle the display order of ${label} on the website? Customers will see a different product order next time they browse.`)) return;
@@ -177,6 +187,7 @@ export default function Products() {
                       ) : (
                         <button className="adm-btn-action" style={{ color: 'var(--red)' }} onClick={() => openQuickSale(p)}>🔥 Sale</button>
                       )}
+                      <button className="adm-btn-action" style={p.isTrending ? { background: 'var(--gold)', color: 'white' } : { color: 'var(--gold-dk, #b8860b)' }} onClick={() => toggleTrending(p)}>{p.isTrending ? '⭐ Trending' : '☆ Trending'}</button>
                       <button className="adm-btn-action" onClick={() => openEdit(p)}>Edit</button>
                       <button className="adm-btn-danger" onClick={() => remove(p._id)}>Del</button>
                     </div></td>

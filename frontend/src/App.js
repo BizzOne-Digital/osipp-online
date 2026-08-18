@@ -16,6 +16,7 @@ import Products from './pages/public/Products';
 import ProductDetail from './pages/public/ProductDetail';
 import Grocery from './pages/public/Grocery';
 import GroceryTerms from './pages/public/GroceryTerms';
+import KnowledgeHub from './pages/public/KnowledgeHub';
 import Gifts from './pages/public/Gifts';
 import Contact from './pages/public/Contact';
 import About from './pages/public/About';
@@ -90,6 +91,7 @@ export default function App() {
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/grocery" element={<Grocery />} />
             <Route path="/grocery-terms" element={<GroceryTerms />} />
+            <Route path="/learn/:slug" element={<KnowledgeHub />} />
             <Route path="/gifts" element={<Gifts />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />

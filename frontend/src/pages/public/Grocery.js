@@ -220,15 +220,7 @@ function Fields({ form, upd, plan }) {
         </>
       )}
 
-      {plan === 'monthly' ? (
-        <div className="form-group"><label className="form-label">Pickup frequency</label>
-          <select className="form-input" value={form.frequency} onChange={e => upd('frequency', e.target.value)}>
-            <option value="weekly">Weekly</option>
-            <option value="bi-weekly">Bi-weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-        </div>
-      ) : (
+      {plan !== 'monthly' && (
         <div className="form-group"><label className="form-label">Delivery Timing</label>
           <div style={{ display: 'flex', gap: 10 }}>
             <button type="button" onClick={() => upd('deliveryTiming', 'asap')} style={{ flex: 1, padding: '10px', borderRadius: 8, border: `2px solid ${form.deliveryTiming === 'asap' ? 'var(--gold)' : 'var(--gray-lt)'}`, background: form.deliveryTiming === 'asap' ? 'var(--cream)' : 'white', fontWeight: 700, cursor: 'pointer' }}>ASAP</button>

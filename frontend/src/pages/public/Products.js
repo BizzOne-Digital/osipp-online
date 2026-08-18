@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchParams, useLocation, useNavigationType } from 'react-router-dom';
+import { useSearchParams, useLocation, useNavigationType, Link } from 'react-router-dom';
 import axios from 'axios';
 import ProductCard from '../../components/ProductCard';
 import { SearchIcon, CloseIcon } from '../../components/Icons';
@@ -13,8 +13,8 @@ const API = process.env.REACT_APP_API_URL || '/api';
 // API round-trip needed to know what's available.
 const TOP_GROUPS = [
   { key: 'All', label: 'All' },
-  { key: 'Beer', label: 'Beer', category: 'Beer', subCategories: ['Beer', 'Craft Beer'] },
-  { key: 'Whisky', label: 'Whisky', category: 'Spirits', subCategories: ['Canadian Whisky', 'Irish Whisky', 'Scotch Whisky', 'Japanese & International Whisky'] },
+  { key: 'Beer', label: 'Beer', category: 'Beer', subCategories: ['Beer', 'Craft Beer'], learnSlug: 'beer' },
+  { key: 'Whisky', label: 'Whisky', category: 'Spirits', subCategories: ['Canadian Whisky', 'Irish Whisky', 'Scotch Whisky', 'Japanese & International Whisky'], subLearnSlugs: { 'Canadian Whisky': 'canadian-whisky' } },
   { key: 'Vodka', label: 'Vodka', category: 'Spirits', subCategories: ['Vodka', 'Flavoured Vodka'] },
   { key: 'Tequila', label: 'Tequila', category: 'Spirits', subCategories: ['Tequila Blanco', 'Tequila Reposado', 'Tequila Anejo'] },
   { key: 'Rum', label: 'Rum', category: 'Spirits', subCategories: ['Dark Rum', 'White Rum'] },
@@ -178,6 +178,11 @@ export default function Products() {
               <button onClick={() => setSelectedSub('')} className={`filter-btn${!selectedSub ? ' active' : ''}`} style={{ padding: '4px 12px', fontSize: 11 }}>All</button>
               {group.subCategories.map(s => <button key={s} onClick={() => setSelectedSub(s)} className={`filter-btn${selectedSub === s ? ' active' : ''}`} style={{ padding: '4px 12px', fontSize: 11 }}>{s}</button>)}
             </div>
+            {(group.learnSlug || group.subLearnSlugs?.[selectedSub]) && (
+              <Link to={`/learn/${group.learnSlug || group.subLearnSlugs[selectedSub]}`} style={{ display: 'inline-block', marginTop: 12, fontSize: 12, fontWeight: 700, color: 'var(--gold-dk, #b8860b)', textDecoration: 'none' }}>
+                📖 Learn more about {selectedSub || group.label} →
+              </Link>
+            )}
           </div>
         )}
 

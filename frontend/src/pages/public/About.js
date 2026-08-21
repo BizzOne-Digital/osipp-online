@@ -18,14 +18,15 @@ export default function About() {
               Fast, Reliable &<br />Responsible Delivery
             </h2>
             <p style={{ fontSize: 16, color: 'var(--gray)', lineHeight: 1.7, maxWidth: 480 }}>
-              O'SIPP Delivery brings your favourite beers, wines, spirits and convenience products right to your door in Mississauga, Oakville &amp; Milton. We partner with the Beer Store, Liquor Store and local convenience stores. 19+ ID required at delivery.
+              O'SIPP Delivery brings your favourite beers, wines, spirits and convenience products right to your door in Mississauga, Oakville &amp; Milton. 19+ ID required at delivery.
             </p>
           </div>
           <div className="about-stats">
-            {[['1hr', 'Delivery Time'], ['$13', 'Flat Delivery Fee'], ['19+', 'ID Required']].map(([n, l]) => (
+            {[['1hr', 'Delivery Time'], ['$4.99', 'Delivery Starts At*'], ['19+', 'ID Required']].map(([n, l]) => (
               <div key={l} className="about-stat"><div className="about-stat-num">{n}</div><div className="about-stat-lbl">{l}</div></div>
             ))}
           </div>
+          <div style={{ fontSize: 12, color: 'var(--gray)', marginTop: 8 }}>*Service and Handling fees may apply at checkout.</div>
         </div>
       </div>
       <div className="section">

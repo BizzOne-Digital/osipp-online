@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { CartIcon, WhatsAppIcon, MenuIcon, CloseIcon, SearchIcon } from './Icons';
@@ -15,6 +15,16 @@ export default function Navbar({ onCartOpen }) {
   const [userMenu, setUserMenu] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // The mobile menu/search dropdowns are positioned relative to the sticky navbar, so if
+  // left open while the page scrolls they stay pinned on screen overlapping content below.
+  // Close them as soon as the user scrolls instead.
+  useEffect(() => {
+    if (!mobileOpen && !searchOpen) return;
+    const onScroll = () => { setMobileOpen(false); setSearchOpen(false); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [mobileOpen, searchOpen]);
 
   const links = [{ to:'/',label:'Home' },{ to:'/products',label:'Alcohol' },{ to:'/products?sale=true',label:'🔥 Sale' },{ to:'/grocery',label:'Grocery' },{ to:'/products?cat=Convenience',label:'Convenience' },{ to:'/gifts',label:'Gifts' },{ to:'/blog',label:'Blog' },{ to:'/tracking',label:'Track Order' }];
 

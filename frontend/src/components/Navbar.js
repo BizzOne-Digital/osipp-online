@@ -16,7 +16,7 @@ export default function Navbar({ onCartOpen }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const links = [{ to:'/',label:'Home' },{ to:'/products',label:'Alcohol' },{ to:'/products?sale=true',label:'🔥 Sale' },{ to:'/grocery',label:'Grocery' },{ to:'/products?cat=Convenience',label:'Convenience' },{ to:'/gifts',label:'Gifts' },{ to:'/tracking',label:'Track Order' }];
+  const links = [{ to:'/',label:'Home' },{ to:'/products',label:'Alcohol' },{ to:'/products?sale=true',label:'🔥 Sale' },{ to:'/grocery',label:'Grocery' },{ to:'/products?cat=Convenience',label:'Convenience' },{ to:'/gifts',label:'Gifts' },{ to:'/blog',label:'Blog' },{ to:'/tracking',label:'Track Order' }];
 
   const runSearch = (e) => {
     e.preventDefault();

@@ -63,6 +63,17 @@ export default function KnowledgeHub() {
             <Link to={guide.shopLink.to} className="btn-primary">{guide.shopLink.label} <ArrowIcon /></Link>
           </div>
         )}
+
+        <div style={{ marginTop: 48, paddingTop: 24, borderTop: '1.5px solid var(--gray-lt)' }}>
+          <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 12 }}>More Knowledge Hub Guides</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            {Object.keys(knowledgeHub).filter(s => s !== slug).map(s => (
+              <Link key={s} to={`/learn/${s}`} style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--gray)', border: '1.5px solid var(--gray-lt)', borderRadius: 20, padding: '6px 14px', textDecoration: 'none' }}>
+                {knowledgeHub[s].title}
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

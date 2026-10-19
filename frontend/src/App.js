@@ -16,6 +16,7 @@ import Products from './pages/public/Products';
 import ProductDetail from './pages/public/ProductDetail';
 import Grocery from './pages/public/Grocery';
 import Blog from './pages/public/Blog';
+import BlogPost from './pages/public/BlogPost';
 import GroceryTerms from './pages/public/GroceryTerms';
 import KnowledgeHub from './pages/public/KnowledgeHub';
 import Gifts from './pages/public/Gifts';
@@ -35,6 +36,7 @@ import AdminProducts from './pages/admin/Products';
 import AdminCoupons from './pages/admin/Coupons';
 import AdminCustomers from './pages/admin/Customers';
 import AdminServices from './pages/admin/Services';
+import AdminBlogs from './pages/admin/Blogs';
 import AdminSettings from './pages/admin/Settings';
 
 function ScrollToTop() {
@@ -93,6 +95,7 @@ export default function App() {
             <Route path="/grocery" element={<Grocery />} />
             <Route path="/grocery-terms" element={<GroceryTerms />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/learn/:slug" element={<KnowledgeHub />} />
             <Route path="/gifts" element={<Gifts />} />
             <Route path="/contact" element={<Contact />} />
@@ -118,6 +121,7 @@ export default function App() {
           <Route path="/admin/coupons" element={<PrivateRoute><AdminLayout><AdminCoupons /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/customers" element={<PrivateRoute><AdminLayout><AdminCustomers /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/services" element={<PrivateRoute><AdminLayout><AdminServices /></AdminLayout></PrivateRoute>} />
+          <Route path="/admin/blog" element={<PrivateRoute><AdminLayout><AdminBlogs /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/settings" element={<PrivateRoute><AdminLayout><AdminSettings /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/*" element={<Navigate to="/admin" />} />
         </Routes>

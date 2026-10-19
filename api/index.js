@@ -44,6 +44,7 @@ require(path.join(__dirname, '..', 'backend', 'models', 'Promotion'));
 require(path.join(__dirname, '..', 'backend', 'models', 'Coupon'));
 require(path.join(__dirname, '..', 'backend', 'models', 'Banner'));
 require(path.join(__dirname, '..', 'backend', 'models', 'ServiceRequest'));
+require(path.join(__dirname, '..', 'backend', 'models', 'BlogPost'));
 
 // ── Routes ──
 app.use('/api/auth', require(path.join(__dirname, '..', 'backend', 'routes', 'auth')));
@@ -57,6 +58,7 @@ app.use('/api/promotions', require(path.join(__dirname, '..', 'backend', 'routes
 app.use('/api/coupons', require(path.join(__dirname, '..', 'backend', 'routes', 'coupons')));
 app.use('/api/banners', require(path.join(__dirname, '..', 'backend', 'routes', 'banners')));
 app.use('/api/services', require(path.join(__dirname, '..', 'backend', 'routes', 'services')));
+app.use('/api/blogs', require(path.join(__dirname, '..', 'backend', 'routes', 'blogs')));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
 

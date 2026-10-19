@@ -60,6 +60,7 @@ app.use('/api/promotions', require('./routes/promotions'));
 app.use('/api/coupons', require('./routes/coupons'));
 app.use('/api/banners', require('./routes/banners'));
 app.use('/api/services', require('./routes/services'));
+app.use('/api/blogs', require('./routes/blogs'));
 app.get('/api/health', (req, res) => res.json({ status: 'ok', db: isConnected }));
 
 app.use((err, req, res, next) => {

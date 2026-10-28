@@ -4,6 +4,28 @@ import axios from 'axios';
 
 const API = process.env.REACT_APP_API_URL || '/api';
 
+const SAFE_HREF = /^(https?:\/\/|mailto:|tel:|\/)/i;
+
+// Turns [text](url) and bare http(s) URLs into links. Only safe schemes are linked, so a
+// "javascript:" URL in a post stays plain text.
+function renderInline(text) {
+  const out = [];
+  const re = /\[([^\]]+)\]\(([^)\s]+)\)|(https?:\/\/[^\s)]+)/g;
+  let last = 0, m, k = 0;
+  while ((m = re.exec(text))) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const label = m[1] || m[3];
+    const href = m[2] || m[3];
+    if (SAFE_HREF.test(href)) {
+      const external = /^https?:\/\//i.test(href);
+      out.push(<a key={k++} href={href} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})} style={{ color: 'var(--gold, #C4853A)', fontWeight: 600, textDecoration: 'underline' }}>{label}</a>);
+    } else out.push(m[0]);
+    last = re.lastIndex;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
 // Turns the admin's plain-text content into React elements: blank line = new paragraph,
 // "## " = heading, "- " = bullet. Rendered as text (never raw HTML), so nothing in a post can inject markup.
 function renderContent(text) {
@@ -11,12 +33,12 @@ function renderContent(text) {
     const lines = block.split('\n').filter(l => l.trim());
     if (!lines.length) return null;
     if (lines.length === 1 && lines[0].startsWith('## ')) {
-      return <h2 key={i} style={{ fontSize: 20, fontWeight: 800, margin: '28px 0 10px' }}>{lines[0].slice(3)}</h2>;
+      return <h2 key={i} style={{ fontSize: 20, fontWeight: 800, margin: '28px 0 10px' }}>{renderInline(lines[0].slice(3))}</h2>;
     }
     if (lines.every(l => l.trim().startsWith('- '))) {
-      return <ul key={i} style={{ paddingLeft: 22, margin: '0 0 16px' }}>{lines.map((l, j) => <li key={j} style={{ marginBottom: 6 }}>{l.trim().slice(2)}</li>)}</ul>;
+      return <ul key={i} style={{ paddingLeft: 22, margin: '0 0 16px' }}>{lines.map((l, j) => <li key={j} style={{ marginBottom: 6 }}>{renderInline(l.trim().slice(2))}</li>)}</ul>;
     }
-    return <p key={i} style={{ margin: '0 0 16px', whiteSpace: 'pre-line' }}>{lines.join('\n')}</p>;
+    return <p key={i} style={{ margin: '0 0 16px', whiteSpace: 'pre-line' }}>{renderInline(lines.join('\n'))}</p>;
   });
 }
 

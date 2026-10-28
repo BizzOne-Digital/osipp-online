@@ -120,7 +120,7 @@ export default function Blogs() {
               <div className="form-group"><label className="form-label">Short Summary</label><textarea className="form-input" rows={2} value={form.excerpt} onChange={e => upd('excerpt', e.target.value)} placeholder="Shown on the blog listing page" /></div>
               <div className="form-group">
                 <label className="form-label">Content *</label>
-                <textarea className="form-input" rows={14} value={form.content} onChange={e => upd('content', e.target.value)} placeholder={'Leave a blank line between paragraphs.\n## Start a line with ## for a heading\n- Start a line with - for a bullet point'} style={{ fontFamily: 'inherit', lineHeight: 1.6 }} />
+                <textarea className="form-input" rows={14} value={form.content} onChange={e => upd('content', e.target.value)} placeholder={'Leave a blank line between paragraphs.\n## Start a line with ## for a heading\n- Start a line with - for a bullet point\nAdd a link like this: [Shop wine](https://example.com) or just paste a full https:// URL'} style={{ fontFamily: 'inherit', lineHeight: 1.6 }} />
               </div>
               <div className="form-group"><label className="form-label">SEO Meta Description (optional)</label><input className="form-input" value={form.metaDescription} onChange={e => upd('metaDescription', e.target.value)} placeholder="Shown in Google search results" /></div>
               <div className="form-group"><label className="form-label">Status</label><select className="form-input" value={form.status} onChange={e => upd('status', e.target.value)}><option value="draft">Draft (hidden)</option><option value="published">Published (live)</option></select></div>
